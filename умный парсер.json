@@ -1,0 +1,528 @@
+{
+  "name": "умный парсер",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "7ddfced5-f872-4e4f-9497-408e72365dec",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.hh.ru/vacancies",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "n8n автоматизация"
+            },
+            {
+              "name": "area",
+              "value": "113"
+            },
+            {
+              "name": "per_page",
+              "value": "10"
+            },
+            {
+              "name": "salary",
+              "value": "100000"
+            },
+            {
+              "name": "only_with_salary",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "6b6626dc-1046-4569-b170-19d07add2f42",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Название: {{ $json.название }}\nКомпания: {{ $json.компания }}\nЗарплата: {{ $json.зарплата }}\nФормат: {{ $json.формат }}\nСсылка: {{ $json.ссылка }}",
+        "options": {
+          "systemMessage": "Ты — HR-аналитик. Тебе дают данные о вакансии.\nТвоя задача — кратко проанализировать вакансию и вернуть ТОЛЬКО JSON без markdown:\n\n\n  \"оценка\": \"высокая/средняя/низкая\",\n  \"плюсы\": \"2-3 главных плюса вакансии\",\n  \"минусы\": \"2-3 главных минуса или чего не хватает\",\n  \"вывод\": \"одно предложение — стоит ли откликаться\"\n\n\nКритерии оценки:\n- высокая: удалённая работа + зарплата указана + n8n упомянут\n- средняя: частично соответствует критериям\n- низкая: офис только + зарплата не указана\n\nВ начале оценки вакансий пиши:\n- название вакансии\n- заплату\n- формат\n- ссылку на вакансию\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "4c1973ea-dc9e-43c8-b33b-4e3a4ddcab0d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        240,
+        192
+      ],
+      "id": "90b28a83-6fcf-4aef-a76c-b77e052db863",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "CahgVi1GwdImfmVL",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items[0].json.items.map(v => ({\n  json: {\n    название: v.name,\n    компания: v.employer.name,\n    зарплата: v.salary ? v.salary.from : null,\n    ссылка: v.alternate_url,\n    формат: v.schedule.name\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "640660a3-af86-4a15-894a-5029ce27d221",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        80,
+        0
+      ],
+      "id": "76f24831-4439-4efe-a550-ed2c6717651c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aa72a452-ecd8-4f66-97ea-9b2cc4911a65",
+              "leftValue": "={{ $('Code in JavaScript').item.json['зарплата'] }}",
+              "rightValue": 100000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "9fa8990c-902e-4349-b395-09e9ec4d2163",
+              "leftValue": "={{ $('Code in JavaScript').item.json['формат'] }}",
+              "rightValue": "Удаленная работа",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        0
+      ],
+      "id": "8a87fd2e-a5ce-4092-99d0-16c27febc5f1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7b5cc5d5-d65f-4dfb-bc22-fd97d2a08fba",
+              "name": "название",
+              "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3aab1c9c-2834-4b14-9e4e-c438a05a7aa7",
+              "name": "компания",
+              "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "16009c2d-c1d4-449a-b857-85514d628cc1",
+              "name": "зарплата",
+              "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
+              "type": "number"
+            },
+            {
+              "id": "42b8af5a-4df8-4357-9973-c878975a2581",
+              "name": "формат",
+              "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "316e4757-2bf9-49ad-8253-d627544cdc1e",
+              "name": "ссылка",
+              "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        -176
+      ],
+      "id": "6f1a561e-306e-42a8-b65e-ae2fbd9d2e38",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "7902494464",
+        "text": "=Вакансии, к которым стоит присмотреться! {{ $json['текст'] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        -176
+      ],
+      "id": "8ffb3a0b-6652-4dc4-b724-17cf17591737",
+      "name": "Send a text message",
+      "webhookId": "b7965126-628b-4f2b-a531-fe32ce227c44",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7902494464",
+        "text": "=А это мутные! {{ $json[\"текст\"] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        16
+      ],
+      "id": "4c642649-42e8-44b9-88f0-7336c356cdd8",
+      "name": "Send a text message1",
+      "webhookId": "b7965126-628b-4f2b-a531-fe32ce227c44",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -176
+      ],
+      "id": "3a86acb6-8d31-45c5-ae2a-7b6b1a659f79",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vacancies = items[0].json.data;\n\nconst text = vacancies.map(v => \n  `📌 ${v.название}\\n🏢 ${v.компания}\\n💰 ${v.зарплата} руб\\n🔗 ${v.ссылка}`\n).join('\\n\\n---\\n\\n');\n\nreturn [{ json: { текст: text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -176
+      ],
+      "id": "db385c8e-9e73-4b9f-9503-07efc10c0c8b",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        16
+      ],
+      "id": "1e3a4588-9bca-4668-bf14-e998062c7935",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vacancies = items[0].json.data;\n\nconst text = vacancies.map(v => \n  `📌 ${v.название}\\n🏢 ${v.компания}\\n💰 ${v.зарплата} руб\\n🔗 ${v.ссылка}`\n).join('\\n\\n---\\n\\n');\n\nreturn [{ json: { текст: text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        16
+      ],
+      "id": "50ffe02b-772b-4a78-8dab-b7bffcea04d6",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7b5cc5d5-d65f-4dfb-bc22-fd97d2a08fba",
+              "name": "название",
+              "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3aab1c9c-2834-4b14-9e4e-c438a05a7aa7",
+              "name": "компания",
+              "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "16009c2d-c1d4-449a-b857-85514d628cc1",
+              "name": "зарплата",
+              "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
+              "type": "number"
+            },
+            {
+              "id": "42b8af5a-4df8-4357-9973-c878975a2581",
+              "name": "формат",
+              "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "316e4757-2bf9-49ad-8253-d627544cdc1e",
+              "name": "ссылка",
+              "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        16
+      ],
+      "id": "35642786-2ec9-48e7-8c38-fe30cb74207b",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7512d678-af48-4a62-b156-962332a8f483",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "Yb1XuOTJgSxynsXP",
+  "tags": []
+}
