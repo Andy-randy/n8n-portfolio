@@ -1,0 +1,561 @@
+{
+  "name": "Система поддержки клиентов",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        0
+      ],
+      "id": "1a863d00-e258-4388-8ead-121538713057",
+      "name": "Telegram Trigger",
+      "webhookId": "b2bcd4b9-6e8f-450b-8140-9130bb0ea98a",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Ты — эксперт по клиентскому сервису. Твоя задача: проанализировать сообщение клиента из Telegram и классифицировать тип обращения. Выбери РОВНО ОДНУ категорию из 4-х.\n\nКритерии классификации (строго следуй):\n\n❓ ВОПРОС — обычные вопросы по услугам, ценам, возможностям, инструкции\nПримеры: \"Сколько стоит?\", \"Как настроить?\", \"Что входит в тариф?\", \"Можно ли интегрировать с 1С?\"\nДействие: AI отвечает сам (сгенерируй готовый ответ в поле response)\n\n🔧 ТЕХНИЧЕСКАЯ ПРОБЛЕМА — ошибки, баги, не работает, сбой\nПримеры: \"Не заходит в личный кабинет\", \"Бот не отвечает\", \"Ошибка 500\", \"Не приходит письмо\"\nДействие: передать в техподдержку (response не нужен)\n\n💰 ЖАЛОБА НА ОПЛАТУ — проблемы с деньгами, платежами, подписками\nПримеры: \"Деньги списали дважды\", \"Не могу оплатить\", \"Где мой чек?\", \"Подписка не отключилась\"\nДействие: передать в фин.отдел (response не нужен)\n\n😡 НЕГАТИВ/ЖАЛОБА — недовольство качеством, задержки, хамство, угрозы\nПримеры: \"Вы хамите!\", \"Уже 3 дня жду!\", \"Никому не советую\", \"Обманули с сроками\"\nДействие: срочно менеджеру (response не нужен)\n\nШаги:\n1. Прочитай сообщение: \"{{ $json.message }}\"\n2. Определи намерение и ключевые слова\n3. Выбери тип: \"вопрос\", \"техническая\", \"оплата\" или \"негатив\"\n4. Если вопрос — напиши ПОЛЕЗНЫЙ готовый ответ клиенту (2-4 предложения, дружелюбно)\n\nТекст сообщения: \"{{ $json.message }}\"\n\nВерни ТОЛЬКО JSON:\n{\n  \"type\": \"вопрос|техническая|оплата|негатив\",\n  \"response\": \"текст ответа (только для вопроса, иначе пустая строка '' или null\"\n}\n\nНе используй markdown форматирование, возвращай только чистый JSON\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "b3f9339b-a1f6-4983-b5c4-6db8793d445e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        192
+      ],
+      "id": "5e724f51-0749-4b01-a4d1-f3ac77d85b44",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "CahgVi1GwdImfmVL",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "вопрос",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "a314da1d-10d0-4785-9c99-e4a32015f014"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "вопрос"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "13559495-5192-4df1-ace2-832984968895",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "техническая",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "техническая"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bd565df3-4f64-42c5-91d9-b79f98760651",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "оплата",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "оплата"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7328a2a3-2d61-48a4-9bb3-494f27e088b6",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "негатив",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "негатив"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -32
+      ],
+      "id": "328204c8-97b7-4b68-b7ce-b6535c5932e1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.response }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -176
+      ],
+      "id": "33416811-3b38-4437-b5eb-65632fa055a5",
+      "name": "Send a text message",
+      "webhookId": "89e9dbc6-8e80-49dc-afcd-70b2a7fc8e58",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "987521654",
+        "text": "У нас проблема!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "ef9fd008-a3b5-4623-9521-09fe9a834e93",
+      "name": "Send a text message1",
+      "webhookId": "74abf01f-1df4-4593-82aa-9f3cfbf28c5b",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "mode": "list",
+          "cachedResultName": "Тестовая для n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1774307373,
+          "mode": "list",
+          "cachedResultName": "портфолио5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1774307373"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Имя": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}",
+            "ID": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "Вопрос": "={{ $('Telegram Trigger').item.json.message.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Вопрос",
+              "displayName": "Вопрос",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        0
+      ],
+      "id": "e198d3a2-c929-4742-8825-f7cefab3d8df",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cmQQOb8PzYi6Lx0K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "987521654",
+        "text": "У нас проблемы!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        176
+      ],
+      "id": "806b4b4a-269b-4f5e-9f1d-0ea81cef0fcd",
+      "name": "Send a text message2",
+      "webhookId": "85526e86-34ae-4eda-bc9d-385c4858c380",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "mode": "list",
+          "cachedResultName": "Тестовая для n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1774307373,
+          "mode": "list",
+          "cachedResultName": "портфолио5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1774307373"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Имя": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}",
+            "ID": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "Вопрос": "={{ $('Telegram Trigger').item.json.message.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Вопрос",
+              "displayName": "Вопрос",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        176
+      ],
+      "id": "49d0b5c8-c07c-4c5c-9a33-4a055f5b2a16",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cmQQOb8PzYi6Lx0K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "987521654",
+        "text": "Менеджер проснись!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        368
+      ],
+      "id": "151a05f5-3c33-4901-b041-897b9a92b9af",
+      "name": "Send a text message3",
+      "webhookId": "1526d6ca-8ef7-4363-b772-b696bab9f707",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.output;\nconst cleaned = raw.replace(/```json\\n|```/g, '').trim();\nconst output = JSON.parse(cleaned);\nreturn [{ json: { type: output.type, response: output.response } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "6b24bb55-a9e3-440d-b2d1-fced12e33f10",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message3": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b5f3aea9-308f-4bc5-821a-5347572be597",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "kTi0mmOAr23Oqz14",
+  "tags": []
+}

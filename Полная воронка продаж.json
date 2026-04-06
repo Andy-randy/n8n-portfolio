@@ -1,0 +1,365 @@
+{
+  "name": "Полная воронка продаж",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "6f2fa4a8-be6c-4f4a-bbd0-72620b2c843f",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -64
+      ],
+      "id": "cf73a7f6-0674-44c5-8ea2-65030a85308c",
+      "name": "Webhook",
+      "webhookId": "6f2fa4a8-be6c-4f4a-bbd0-72620b2c843f"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Ты — эксперт по маркетингу и квалификации лидов. Твоя задача: проанализировать текст заявки клиента и классифицировать его по \"температуре\" — горячий, тёплый или холодный. Это маркетинговый термин: насколько клиент готов купить прямо сейчас.\n\nКритерии классификации (строго следуй им, без исключений):\n\n🔥 **Горячий клиент** (высокая готовность к покупке СЕЙЧАС):\n- Конкретно хочет купить: упоминает заказ, бюджет, сроки, цену, \"хочу заказать/купить\".\n- Знает, что хочет: описывает детали (например, \"сайт за 50к руб через 2 недели\").\n- Пример: \"Хочу заказать сайт, бюджет 50,000 руб, нужно через 2 недели\".\n\n🌡 **Тёплый клиент** (интерес есть, но думает):\n- Задаёт вопросы о возможностях, сравнивает варианты, интересуется \"подробнее\".\n- Нет конкретики по покупке, но показывает интерес к продукту/услуге.\n- Пример: \"Интересует автоматизация бизнеса, хочу узнать подробнее\".\n\n❄️ **Холодный клиент** (просто смотрит, не готов):\n- Расплывчато: \"интересуюсь\", \"что это такое\", без конкретики или намерения купить.\n- Пример: \"Просто интересуюсь что такое автоматизация\".\n\nШаги анализа:\n1. Прочитай текст заявки внимательно.\n2. Определи ключевые слова, намерение и конкретику.\n3. Выбери РОВНО ОДНУ категорию: \"горячий\", \"тёплый\" или \"холодный\".\n4. Обоснуй решение в 1-2 предложениях (кратко).\n\nТекст заявки для анализа: \"{{ $json.text }}\"  // Замени на переменную n8n с текстом заявки\n\nВерни ТОЛЬКО JSON в этом формате, без лишнего текста:\n{\n  \"temperature\": \"горячий|тёплый|холодный\",\n  \"reason\": \"Краткое обоснование (1-2 предложения)\",\n  \"action\": \"Рекомендация: для горячий— срочно звонить; для тёплый— отправить презентацию; для холодный— полезный контент\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -416,
+        -64
+      ],
+      "id": "d25d5f68-03da-4b0d-90be-d43a85269418",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        128
+      ],
+      "id": "71c8d82a-382d-4b2a-b4ce-7fd921538bfd",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "CahgVi1GwdImfmVL",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "\"холодный\"",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "cfef3a0a-04c6-47ac-a968-a04cfd4e1ef1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "холодный"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e8822473-552c-4fbe-b537-a9ec8451e952",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "\"горячий\"",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "горячий"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "265300c5-7bdd-447c-b0b9-b7ad0407386d",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "\"тёплый\"",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "тёплый"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        -80
+      ],
+      "id": "e9e6114f-2c7b-4b3d-9647-bb17be35d92d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "7902494464",
+        "text": "СРОЧНО! Горячий клиент!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "bafaa2ff-3ee3-4d81-a98e-c50c538624cf",
+      "name": "Send a text message",
+      "webhookId": "65d02f71-f06e-4d88-8207-bb759981f88e",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-gwc7t4.bitrix24.ru/rest/1/9uzaew39xs80eecy/crm.deal.add.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Webhook').item.json.query['Имя'] }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Webhook').item.json.query['Телефон'] }} Email: {{ $('Webhook').item.json.query.Email }} Заявка: {{ $('Webhook').item.json.query['Интерес'] }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        -64
+      ],
+      "id": "4bd7f5ad-2445-4a2e-a298-8ff8b33eedb5",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "sendTo": "andy_randy23@mail.ru",
+        "subject": "Презентация",
+        "emailType": "text",
+        "message": "курлы-мурлы",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        96
+      ],
+      "id": "dafb34ab-5515-44fc-be93-2dfafc021083",
+      "name": "Send a message",
+      "webhookId": "225a0963-a9d5-48b2-aa8a-f01e63227956",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BUm4qnzFno1tLMtq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "andy_randy23@mail.ru",
+        "subject": "Ой бля, думай давай!",
+        "emailType": "text",
+        "message": "Ну чё ты, морда, не ссы!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -224
+      ],
+      "id": "dc884e59-3045-4e37-ab22-98c3bd457d0f",
+      "name": "Send a message1",
+      "webhookId": "d083361f-2e93-4138-8339-a8e6d5bd835c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BUm4qnzFno1tLMtq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        304,
+        -224
+      ],
+      "id": "9c0d2888-9b93-494c-b16f-c0c1a4a8674d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cmQQOb8PzYi6Lx0K",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "156e764d-a593-4f3b-86fe-07e949784743",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "nliVpPsQtERWGL6n",
+  "tags": []
+}

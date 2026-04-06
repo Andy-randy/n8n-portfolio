@@ -1,0 +1,413 @@
+{
+  "name": "HR/Onboarding automation",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "mode": "list",
+          "cachedResultName": "Тестовая для n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1642490750,
+          "mode": "list",
+          "cachedResultName": "HR",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1642490750"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "d2f7b1c3-f81c-410e-9b00-b8c46fbe2252",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "YzcBscfxe4ii2hZz",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=Добро пожаловать в компанию, {{$json[\"Имя\"]}}",
+        "emailType": "text",
+        "message": "=Привет, {{$json[\"Имя\"]}}!\n\nДобро пожаловать в нашу команду {{ $json[\"Отдел\"] }}.\nТвоя роль: {{ $json[\"Роль\"] }}.\nДата начала работы: {{ $json[\"Дата старта\"] }}.\n\nСкоро с тобой свяжется HR с деталями доступа и обучением.\n\nHR-отдел\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "4e3dd3de-3515-428d-b8c3-b1f7638141d6",
+      "name": "Send a message",
+      "webhookId": "a433c839-048e-40cb-a445-a1939e2d5092",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BUm4qnzFno1tLMtq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7902494464",
+        "text": "=🚀 Новый сотрудник!  👤 {{ $('Google Sheets Trigger').item.json['Имя'] }} 📧 {{ $('Google Sheets Trigger').item.json.Email }} 📋 Роль: {{ $('Google Sheets Trigger').item.json['Роль'] }} 🏢 Отдел: {{ $('Google Sheets Trigger').item.json['Отдел'] }} 📅 Старт: {{ $('Google Sheets Trigger').item.json['Дата старта'] }}  Задачи: • Создать доступы • Добавить в каналы • Провести вводный инструктаж",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "091bc095-aa5a-4f9e-aaf3-7251a862df6c",
+      "name": "Send a text message",
+      "webhookId": "c1bf6943-1ddc-4825-8a4a-c68d1f708d61",
+      "credentials": {
+        "telegramApi": {
+          "id": "lUdskRcMijpMhuX7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40a1ca59-f103-4222-8003-8d42c3a87032",
+              "leftValue": "={{ $('Google Sheets Trigger').item.json['Роль'] }}",
+              "rightValue": "developer",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "249f7b58-4300-4fbe-b29f-9dde0ad7c61e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "name": "=Onboarding:  ({{ $('Google Sheets Trigger').item.json['Имя'] }}, {{ $('Google Sheets Trigger').item.json['Роль'] }})",
+        "description": "=👤 {{ $('Google Sheets Trigger').item.json['Имя'] }}\n📧 {{ $('Google Sheets Trigger').item.json.Email }}\n📅 {{ $('Google Sheets Trigger').item.json['Дата старта'] }}\n\nЧек-лист:\n-  Доступы к сервисам\n-  Slack/Telegram канал\n-  Обучение (видео, docs)\n-  Знакомство с командой\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -96
+      ],
+      "id": "8015baa7-c7be-46b0-900a-f1a91716ad9c",
+      "name": "Create a card"
+    },
+    {
+      "parameters": {
+        "name": "=Onboarding:  ({{ $('Google Sheets Trigger').item.json['Имя'] }}, {{ $('Google Sheets Trigger').item.json['Роль'] }})",
+        "description": "=👤 {{ $('Google Sheets Trigger').item.json['Имя'] }}\n📧 {{ $('Google Sheets Trigger').item.json.Email }}\n📅 {{ $('Google Sheets Trigger').item.json['Дата старта'] }}\n\nЧек-лист:\n-  Доступы к сервисам\n-  Slack/Telegram канал\n-  Обучение (видео, docs)\n-  Знакомство с командой\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        128,
+        96
+      ],
+      "id": "37850a9f-00e6-4084-9edf-e31d9f09bc6d",
+      "name": "Create a card1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        304,
+        96
+      ],
+      "id": "193b946f-34e3-4a47-9314-8d668002fb95",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "mode": "list",
+          "cachedResultName": "Тестовая для n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1642490750,
+          "mode": "list",
+          "cachedResultName": "HR",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1642490750"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json[\"Email\"] }}",
+            "Статус": "Onboarded ✅"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Роль",
+              "displayName": "Роль",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Отдел",
+              "displayName": "Отдел",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Дата старта",
+              "displayName": "Дата старта",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Статус",
+              "displayName": "Статус",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        96
+      ],
+      "id": "17562d01-1ebb-4287-ae0f-3d08bf5171d2",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cmQQOb8PzYi6Lx0K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "user",
+        "owner": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        -96
+      ],
+      "id": "3dd3afce-6840-4994-8633-f1dddcc9b37f",
+      "name": "Get a user's repositories",
+      "webhookId": "83b7a066-acd0-485b-9ed0-f6a749f77f65"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a card",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a card1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a card": {
+      "main": [
+        [
+          {
+            "node": "Get a user's repositories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a card1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a user's repositories": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "932e98b4-4c85-4352-95ed-3209b6016b2b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "Fx5yKeDLodGnBE1F",
+  "tags": []
+}
