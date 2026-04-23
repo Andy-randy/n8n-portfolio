@@ -26,5 +26,5 @@ Working workflows that aren't yet written up as detailed case studies. The expor
 - **Customer Booking Bot** — запись клиентов на услуги через Telegram.  
   Booking clients for services via Telegram.
 
-- **Notion API Automations** — набор мелких воркфлоу для работы с Notion: добавление тем, кнопки, объяснение темы через LLM, заполнение базы.  
+- **[Notion API Automations](./Notion/)** — набор мелких воркфлоу для работы с Notion: добавление тем, кнопки, объяснение темы через LLM, заполнение базы.  
   A set of small Notion workflows: adding topics, buttons, LLM-powered topic explanation, knowledge-base population.

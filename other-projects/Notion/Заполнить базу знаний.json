@@ -1,0 +1,101 @@
+{
+  "name": "Заполнить базу знаний",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        0
+      ],
+      "id": "759b7b51-1308-4300-8ad2-744d28065eac",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const topics = [\n  { name: \"Установка и запуск n8n локально\", block: \"Блок 0 — Среда\" },\n  { name: \"JSON — основа основ\", block: \"Блок 1 — JSON\" },\n  { name: \"Schedule Trigger\", block: \"Блок 2 — Триггеры\" },\n  { name: \"Webhook\", block: \"Блок 2 — Триггеры\" },\n  { name: \"HTTP Request\", block: \"Блок 3 — HTTP\" },\n  { name: \"IF — условное ветвление\", block: \"Блок 4 — Логика\" },\n  { name: \"Switch\", block: \"Блок 4 — Логика\" },\n  { name: \"Loop Over Items\", block: \"Блок 4 — Логика\" },\n  { name: \"Aggregate\", block: \"Блок 4 — Логика\" },\n  { name: \"Google Sheets\", block: \"Блок 5 — Интеграции\" },\n  { name: \"Gmail и Email\", block: \"Блок 5 — Интеграции\" },\n  { name: \"Telegram\", block: \"Блок 5 — Интеграции\" },\n  { name: \"Bitrix24\", block: \"Блок 5 — Интеграции\" },\n  { name: \"AI Agent\", block: \"Блок 6 — AI\" },\n  { name: \"Память AI (Simple Memory)\", block: \"Блок 6 — AI\" },\n  { name: \"Read/Write Binary Files\", block: \"Блок 7 — Файлы\" },\n  { name: \"Extract from File\", block: \"Блок 7 — Файлы\" },\n  { name: \"Code-нода (JavaScript)\", block: \"Блок 7 — Файлы\" },\n  { name: \"Subworkflows\", block: \"Блок 8 — Архитектура\" },\n  { name: \"Обработка ошибок\", block: \"Блок 8 — Архитектура\" },\n  { name: \"Docker\", block: \"Блок 10 — Docker\" },\n  { name: \"Docker Compose\", block: \"Блок 10 — Docker\" },\n  { name: \"Основы Python\", block: \"Блок 11 — Python\" },\n  { name: \"Python и API\", block: \"Блок 11 — Python\" },\n  { name: \"MCP — Model Context Protocol\", block: \"Блок 12 — MCP\" },\n  { name: \"Деплой n8n на VPS\", block: \"Блок 13 — Деплой\" }\n];\n\nreturn topics.map(t => ({ json: t }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "4912555e-f4c6-4d38-8a13-b01405a59be2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"parent\":{\"database_id\":\"33bf931d0b4480019535f6067f3fa066\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.name }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.block }}\"}}}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        0
+      ],
+      "id": "e01cc2ba-5ac3-4030-a9de-1ed2dae9d2ed",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d92d4f12-8b16-475e-8588-044b12535b4a",
+  "meta": {
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "uHfIxKzlj2g9WKNS",
+  "tags": []
+}

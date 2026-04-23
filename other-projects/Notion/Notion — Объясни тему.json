@@ -1,0 +1,147 @@
+{
+  "name": "Notion — Объясни тему",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "2d7e29bd-36a2-4830-b0e1-2185172a2462",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7ea32c81-6bc8-44b8-bdfc-87059ef50ca9",
+      "name": "Webhook",
+      "webhookId": "2d7e29bd-36a2-4830-b0e1-2185172a2462"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Объясни тему '{{ $json.query.topic }}' из курса n8n простым языком, как ребёнку. Дай краткое объяснение на 3-5 предложений на русском языке.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f5b8a830-8a46-4b7a-860b-c0de6eff1676",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $json.notion_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=application/json",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "bc8f1bb4-eb1e-4735-889e-754b05fbe5e6",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $('HTTP Request').item.json.choices[0].message.content\n  .replace(/\\\\/g, '')\n  .replace(/\"/g, '\\\\\"')\n  .replace(/\\n/g, ' ')\n  .replace(/\\r/g, '')\n  .slice(0, 2000);\n\nconst pageId = $('Webhook').item.json.query.page_id;\nconst notionUrl = `https://api.notion.com/v1/pages/${pageId}`;\nconst body = `{\"properties\":{\"Объяснение от Claude\":{\"rich_text\":[{\"text\":{\"content\":\"${content}\"}}]}}}`;\n\nreturn [{ json: { explanation: content, body: body, page_id: pageId, notion_url: notionUrl } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b6beb295-1dd9-4c81-ba4c-19badf847c1f",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "778d0d34-0b59-45c7-a649-1864ab7db345",
+  "meta": {
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "aEspIfDuWHODzOHU",
+  "tags": []
+}

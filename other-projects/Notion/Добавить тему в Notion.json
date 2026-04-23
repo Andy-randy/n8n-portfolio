@@ -1,0 +1,82 @@
+{
+  "name": "Добавить тему в Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "bea5f6fe-c219-45c0-b19f-179a293069cb",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dc101c51-e57d-4129-b1f7-3f09e4b2fd6d",
+      "name": "Webhook",
+      "webhookId": "bea5f6fe-c219-45c0-b19f-179a293069cb"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"parent\":{\"database_id\":\"33bf931d0b4480019535f6067f3fa066\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.query.topic }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.query.block }}\"}}}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fd690eaa-de1e-48b0-bbb8-7488f1b11da5",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "800a7ddd-bf36-4b6d-bd3b-a4eeedece2b8",
+  "meta": {
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "id": "tIQxukQuG4159tl8",
+  "tags": []
+}
