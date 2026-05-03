@@ -9,7 +9,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -608,
+        -640,
         -64
       ],
       "id": "cf73a7f6-0674-44c5-8ea2-65030a85308c",
@@ -21,13 +21,13 @@
         "promptType": "define",
         "text": "={{ $json.query }}",
         "options": {
-          "systemMessage": "Ты — эксперт по маркетингу и квалификации лидов. Твоя задача: проанализировать текст заявки клиента и классифицировать его по \"температуре\" — горячий, тёплый или холодный. Это маркетинговый термин: насколько клиент готов купить прямо сейчас.\n\nКритерии классификации (строго следуй им, без исключений):\n\n🔥 **Горячий клиент** (высокая готовность к покупке СЕЙЧАС):\n- Конкретно хочет купить: упоминает заказ, бюджет, сроки, цену, \"хочу заказать/купить\".\n- Знает, что хочет: описывает детали (например, \"сайт за 50к руб через 2 недели\").\n- Пример: \"Хочу заказать сайт, бюджет 50,000 руб, нужно через 2 недели\".\n\n🌡 **Тёплый клиент** (интерес есть, но думает):\n- Задаёт вопросы о возможностях, сравнивает варианты, интересуется \"подробнее\".\n- Нет конкретики по покупке, но показывает интерес к продукту/услуге.\n- Пример: \"Интересует автоматизация бизнеса, хочу узнать подробнее\".\n\n❄️ **Холодный клиент** (просто смотрит, не готов):\n- Расплывчато: \"интересуюсь\", \"что это такое\", без конкретики или намерения купить.\n- Пример: \"Просто интересуюсь что такое автоматизация\".\n\nШаги анализа:\n1. Прочитай текст заявки внимательно.\n2. Определи ключевые слова, намерение и конкретику.\n3. Выбери РОВНО ОДНУ категорию: \"горячий\", \"тёплый\" или \"холодный\".\n4. Обоснуй решение в 1-2 предложениях (кратко).\n\nТекст заявки для анализа: \"{{ $json.text }}\"  // Замени на переменную n8n с текстом заявки\n\nВерни ТОЛЬКО JSON в этом формате, без лишнего текста:\n{\n  \"temperature\": \"горячий|тёплый|холодный\",\n  \"reason\": \"Краткое обоснование (1-2 предложения)\",\n  \"action\": \"Рекомендация: для горячий— срочно звонить; для тёплый— отправить презентацию; для холодный— полезный контент\"\n}\n"
+          "systemMessage": "=Ты — эксперт по маркетингу и квалификации лидов. Твоя задача: проанализировать текст заявки клиента и классифицировать его по \"температуре\" — горячий, тёплый или холодный. Это маркетинговый термин: насколько клиент готов купить прямо сейчас.\n\nКритерии классификации (строго следуй им, без исключений):\n\n🔥 **Горячий клиент** (высокая готовность к покупке СЕЙЧАС):\n- Конкретно хочет купить: упоминает заказ, бюджет, сроки, цену, \"хочу заказать/купить\".\n- Знает, что хочет: описывает детали (например, \"сайт за 50к руб через 2 недели\").\n- Пример: \"Хочу заказать сайт, бюджет 50,000 руб, нужно через 2 недели\".\n\n🌡 **Тёплый клиент** (интерес есть, но думает):\n- Задаёт вопросы о возможностях, сравнивает варианты, интересуется \"подробнее\".\n- Нет конкретики по покупке, но показывает интерес к продукту/услуге.\n- Пример: \"Интересует автоматизация бизнеса, хочу узнать подробнее\".\n\n❄️ **Холодный клиент** (просто смотрит, не готов):\n- Расплывчато: \"интересуюсь\", \"что это такое\", без конкретики или намерения купить.\n- Пример: \"Просто интересуюсь что такое автоматизация\".\n\nШаги анализа:\n1. Прочитай текст заявки внимательно.\n2. Определи ключевые слова, намерение и конкретику.\n3. Выбери РОВНО ОДНУ категорию: \"горячий\", \"тёплый\" или \"холодный\".\n4. Обоснуй решение в 1-2 предложениях (кратко).\n\nТекст заявки для анализа:\n{{ $json.query.request }}\n\nВерни ТОЛЬКО чистый JSON без markdown, без пояснений, без текста вокруг.\n\nФормат:\n{\n  \"temperature\": \"горячий|тёплый|холодный\",\n  \"reason\": \"краткое объяснение решения\",\n  \"next_action\": \"рекомендованное действие\"\n}"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -416,
+        -480,
         -64
       ],
       "id": "d25d5f68-03da-4b0d-90be-d43a85269418",
@@ -50,7 +50,7 @@
       "name": "Groq Chat Model",
       "credentials": {
         "groqApi": {
-          "id": "CahgVi1GwdImfmVL",
+          "id": "xxxx",
           "name": "Groq account"
         }
       }
@@ -69,11 +69,11 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "\"холодный\"",
+                    "leftValue": "={{ $json.temperature }}",
+                    "rightValue": "холодный",
                     "operator": {
                       "type": "string",
-                      "operation": "contains"
+                      "operation": "equals"
                     },
                     "id": "cfef3a0a-04c6-47ac-a968-a04cfd4e1ef1"
                   }
@@ -94,11 +94,11 @@
                 "conditions": [
                   {
                     "id": "e8822473-552c-4fbe-b537-a9ec8451e952",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "\"горячий\"",
+                    "leftValue": "={{ $json.temperature }}",
+                    "rightValue": "горячий",
                     "operator": {
                       "type": "string",
-                      "operation": "contains"
+                      "operation": "equals"
                     }
                   }
                 ],
@@ -118,11 +118,11 @@
                 "conditions": [
                   {
                     "id": "265300c5-7bdd-447c-b0b9-b7ad0407386d",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "\"тёплый\"",
+                    "leftValue": "={{ $json.temperature }}",
+                    "rightValue": "тёплый",
                     "operator": {
                       "type": "string",
-                      "operation": "contains"
+                      "operation": "equals"
                     }
                   }
                 ],
@@ -133,21 +133,23 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -96,
-        -80
+        -48,
+        -96
       ],
       "id": "e9e6114f-2c7b-4b3d-9647-bb17be35d92d",
       "name": "Switch"
     },
     {
       "parameters": {
-        "chatId": "7902494464",
-        "text": "СРОЧНО! Горячий клиент!",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🔥 Горячий лид!\n\nИмя: {{ $json.name }}\nТелефон: {{ $json.phone }}\nEmail: {{ $json.email }}\nЗапрос: {{ $json.request }}\n\nПочему горячий:\n{{ $json.reason }}\n\nДействие:\n{{ $json.next_action }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -163,7 +165,7 @@
       "webhookId": "65d02f71-f06e-4d88-8207-bb759981f88e",
       "credentials": {
         "telegramApi": {
-          "id": "lUdskRcMijpMhuX7",
+          "id": "xxxx",
           "name": "Telegram account"
         }
       }
@@ -171,16 +173,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://b24-gwc7t4.bitrix24.ru/rest/1/9uzaew39xs80eecy/crm.deal.add.json",
+        "url": "https://your-domain.bitrix24.ru/rest/USER_ID/WEBHOOK_KEY/crm.deal.add.json",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Webhook').item.json.query['Имя'] }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Webhook').item.json.query['Телефон'] }} Email: {{ $('Webhook').item.json.query.Email }} Заявка: {{ $('Webhook').item.json.query['Интерес'] }}\"\n  }\n}",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Code in JavaScript').item.json.name }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Code in JavaScript').item.json.phone }} Email: {{ $('Code in JavaScript').item.json.email }} Заявка: {{ $('Code in JavaScript').item.json.request }} Температура: {{ $('Code in JavaScript').item.json.temperature }} Причина: {{ $('Code in JavaScript').item.json.reason }}\",\n    \"OPPORTUNITY\": {{ $('Code in JavaScript').item.json.budget }},\n    \"CURRENCY_ID\": \"RUB\"\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        480,
+        464,
         -64
       ],
       "id": "4bd7f5ad-2445-4a2e-a298-8ff8b33eedb5",
@@ -188,10 +190,10 @@
     },
     {
       "parameters": {
-        "sendTo": "andy_randy23@mail.ru",
-        "subject": "Презентация",
+        "sendTo": "{{ $json.email }}",
+        "subject": "Presentation",
         "emailType": "text",
-        "message": "курлы-мурлы",
+        "message": "smth",
         "options": {
           "appendAttribution": false
         }
@@ -199,39 +201,39 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        80,
-        96
+        208,
+        144
       ],
       "id": "dafb34ab-5515-44fc-be93-2dfafc021083",
       "name": "Send a message",
       "webhookId": "225a0963-a9d5-48b2-aa8a-f01e63227956",
       "credentials": {
         "gmailOAuth2": {
-          "id": "BUm4qnzFno1tLMtq",
+          "id": "xxxx",
           "name": "Gmail account"
         }
       }
     },
     {
       "parameters": {
-        "sendTo": "andy_randy23@mail.ru",
-        "subject": "Ой бля, думай давай!",
+        "sendTo": "{{ $json.email }}",
+        "subject": "TEXT",
         "emailType": "text",
-        "message": "Ну чё ты, морда, не ссы!",
+        "message": "text",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        112,
-        -224
+        208,
+        -256
       ],
       "id": "dc884e59-3045-4e37-ab22-98c3bd457d0f",
       "name": "Send a message1",
       "webhookId": "d083361f-2e93-4138-8339-a8e6d5bd835c",
       "credentials": {
         "gmailOAuth2": {
-          "id": "BUm4qnzFno1tLMtq",
+          "id": "xxxx",
           "name": "Gmail account"
         }
       }
@@ -253,15 +255,81 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        304,
-        -224
+        448,
+        -256
       ],
       "id": "9c0d2888-9b93-494c-b16f-c0c1a4a8674d",
       "name": "Append row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "cmQQOb8PzYi6Lx0K",
+          "id": "xxxx",
           "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\nconst lead = $('Webhook').first().json.query;\n\nconst cleaned = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Ищем бюджет в тексте заявки\nconst requestText = lead.request || '';\nconst budgetMatch = requestText.match(/(?:бюджет|цена|стоимость)\\D*(\\d[\\d\\s.,]*)/i);\n\nlet budget = null;\n\nif (budgetMatch) {\n  budget = Number(\n    budgetMatch[1]\n      .replace(/\\s/g, '')\n      .replace(',', '')\n      .replace('.', '')\n  );\n}\n\ntry {\n  const data = JSON.parse(cleaned);\n\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        temperature: data.temperature,\n        reason: data.reason,\n        next_action: data.next_action,\n        raw_ai_output: raw\n      }\n    }\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        temperature: \"ошибка\",\n        reason: \"AI вернул невалидный JSON\",\n        next_action: \"Проверить вручную\",\n        raw_ai_output: raw,\n        error: error.message\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -64
+      ],
+      "id": "9aa83c9b-3ea2-47b5-80ec-006cd35fd01e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        464,
+        144
+      ],
+      "id": "e614f8cd-80f1-42d0-a02b-7769361338c1",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xxxx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=AI вернул кривой JSON, надо проверить.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        192
+      ],
+      "id": "a2914e83-1380-4955-acdd-e08fabcfd56a",
+      "name": "Send a text message1",
+      "webhookId": "65d02f71-f06e-4d88-8207-bb759981f88e",
+      "credentials": {
+        "telegramApi": {
+          "id": "xxxx",
+          "name": "Telegram account"
         }
       }
     }
@@ -294,7 +362,7 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
@@ -323,6 +391,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -347,6 +422,28 @@
           }
         ]
       ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -355,7 +452,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "156e764d-a593-4f3b-86fe-07e949784743",
+  "versionId": "267f4185-6475-4fd9-a525-dc66da4422e7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
