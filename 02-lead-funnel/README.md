@@ -1,5 +1,7 @@
 # AI Lead Qualification & Sales Funnel Automation
 
+![Architecture](./screenshots/architecture.png)
+
 ## Description
 
 This project is an n8n workflow for automated lead processing.
