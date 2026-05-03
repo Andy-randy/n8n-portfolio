@@ -1,8 +1,13 @@
-# n8n Portfolio · Daria
+[README_n8n_portfolio_rewritten.md](https://github.com/user-attachments/files/27321922/README_n8n_portfolio_rewritten.md)
+# n8n Portfolio · Daria Lesnikova
 
-Портфолио воркфлоу на n8n с интеграцией LLM — AI-агенты для продаж, маршрутизация лидов, парсинг данных с LLM-скорингом. Каждый featured-кейс разобран по схеме **Контекст → Система → Что интересно → Стек**, с экспортированным JSON и скринами архитектуры.
+Портфолио workflow-проектов на **n8n** с интеграцией **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24 и Notion**.
 
-An n8n workflow portfolio with LLM integrations — AI agents for sales, lead routing, data parsing with LLM-based scoring. Each featured case is documented as **Context → System → What's interesting → Stack**, with the exported JSON and architecture screenshots.
+Здесь собраны автоматизации, которые решают практические бизнес-задачи: обработка заявок, квалификация лидов, клиентская коммуникация, парсинг данных, уведомления и логирование.
+
+An n8n workflow portfolio with **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24, and Notion** integrations.
+
+The repository contains practical automation projects for lead processing, AI qualification, customer communication, data parsing, notifications, and logging.
 
 [🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
 
@@ -10,88 +15,352 @@ An n8n workflow portfolio with LLM integrations — AI agents for sales, lead ro
 
 ## 🇷🇺 По-русски
 
-### Featured-кейсы
+## Структура репозитория
 
-| # | Кейс | Ключевая идея | Стек |
-|---|------|---------------|------|
-| 1 | [AI-ассистент, который сам закрывает заказы](./01-ai-sales-assistant/) | LLM решает, когда пора оформлять сделку | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Groq-классификатор + Switch на 3 разных ответа: от холодного email до сделки в CRM | `n8n` · `Groq` · Webhook · `Gmail` · `Bitrix24` |
-| 3 | [Умный парсер вакансий с LLM-скорингом](./03-hh-parser/) | Разделение LLM / детерминированной логики | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
+```text
+n8n-portfolio/
+├── 01-ai-sales-assistant/
+├── 02-lead-funnel/
+├── 03-hh-parser/
+├── other-projects/
+└── README.md
+```
 
-Каждый кейс — в своей папке, с подробным README на двух языках, экспортированным JSON и скринами.
+---
 
-### Остальные проекты
+## Featured-кейсы
 
-Менее формализованные, но рабочие — лежат в [`other-projects/`](./other-projects/) с экспортированными JSON:
+| # | Проект | Что делает | Стек |
+|---|--------|------------|------|
+| 1 | [AI-ассистент продаж](./01-ai-sales-assistant/) | Ведёт клиента в Telegram, собирает данные и помогает оформить заказ | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
+| 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Делит заявки на холодные / тёплые / горячие и запускает разные сценарии | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
+| 3 | [Умный парсер вакансий](./03-hh-parser/) | Получает вакансии через API, фильтрует и оценивает их через LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 
-- Новостной дайджест из RSS-источников
-- Обработка заказов для e-commerce
-- HR-онбординг с уведомлениями
-- Финансовый мониторинг
-- AI-репурпозинг контента
-- Клиентский букинг-бот
-- Автоматизации для Notion через API
+---
 
-### Стек
+## 1. AI-ассистент продаж
 
-**Automation** `n8n` · webhooks · subworkflows · error handling · cron  
-**AI / LLM** `Groq` · `OpenAI` · prompt engineering · AI-агенты с памятью  
-**Backend** `Python` · REST API · `Docker` · `Git`  
-**Data & tools** `Google Sheets` · `Notion API` · `Bitrix24` · `Telegram Bot API` · `HH.ru API`
+**Папка:** [`01-ai-sales-assistant`](./01-ai-sales-assistant/)
 
-### Как запустить воркфлоу
+AI-ассистент для Telegram, который ведёт клиента по сценарию продажи: отвечает на вопросы, собирает нужные данные и определяет, когда можно оформлять заказ.
 
-1. Скачай нужный `workflow.json` из папки кейса.
-2. В n8n открой **Workflows → Import from File** и выбери JSON.
-3. Настрой credentials: Telegram Bot, Groq API key, Google Sheets OAuth и так далее — список зависит от кейса, все нужные credentials указаны в README каждого проекта.
-4. Активируй воркфлоу.
+### Ключевая логика
 
-### Контакты
+```text
+Telegram Trigger
+→ AI Agent + Simple Memory
+→ IF
+├── уточняющий вопрос клиенту
+└── подтверждение заказа → Google Sheets → Telegram manager notification
+```
+
+### Что показывает проект
+
+- работу AI Agent в n8n;
+- использование Simple Memory;
+- диалоговую логику без жёсткого if-else по ключевым словам;
+- запись структурированных данных в Google Sheets;
+- уведомление менеджера.
+
+---
+
+## 2. Воронка лидов с LLM-классификатором
+
+**Папка:** [`02-lead-funnel`](./02-lead-funnel/)
+
+Workflow для автоматической обработки входящих заявок. Система принимает заявку через Webhook, анализирует её с помощью AI Agent и распределяет лид по температуре.
+
+### Ключевая логика
+
+```text
+Webhook
+→ AI Agent
+→ Code node
+→ Switch
+├── холодный лид → email + Google Sheets
+├── тёплый лид → email + Google Sheets
+├── горячий лид → Telegram manager ping + Bitrix24 CRM
+└── fallback → Telegram error notification
+```
+
+### Что показывает проект
+
+- AI-классификацию заявок;
+- нормализацию JSON-ответа модели через Code node;
+- извлечение бюджета из текста заявки;
+- маршрутизацию через Switch;
+- интеграцию с Bitrix24 через REST API;
+- fallback-ветку на случай некорректного AI-ответа.
+
+---
+
+## 3. Умный парсер вакансий с LLM-скорингом
+
+**Папка:** [`03-hh-parser`](./03-hh-parser/)
+
+Workflow для поиска и первичной оценки вакансий. Он получает вакансии через HH.ru API, нормализует данные, оценивает вакансии через AI и отправляет результат в Telegram.
+
+### Ключевая логика
+
+```text
+Manual / Schedule Trigger
+→ HH.ru API
+→ Code node
+→ Loop Over Items
+→ AI Agent
+→ IF
+→ Aggregate
+→ Telegram digest
+```
+
+### Что показывает проект
+
+- работу с внешним API;
+- обработку массива данных;
+- разделение AI-оценки и детерминированной фильтрации;
+- сборку дайджеста через Aggregate + Code;
+- Telegram-уведомления.
+
+---
+
+## Остальные проекты
+
+В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
+
+- RSS / news digest automation;
+- e-commerce order processing;
+- HR onboarding workflow;
+- financial monitoring;
+- AI content repurposing;
+- customer support routing;
+- Notion API automations.
+
+---
+
+## Стек
+
+**Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
+**AI / LLM:** `Groq` · AI Agent · Simple Memory · structured JSON output · prompt engineering  
+**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API`  
+**Code:** `JavaScript` Code node · JSON parsing · data normalization  
+**Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
+
+---
+
+## Как запустить workflow
+
+1. Открой нужную папку проекта.
+2. Скачай файл `workflow.json`.
+3. В n8n выбери **Workflows → Import from File**.
+4. Подключи свои credentials:
+   - Groq API;
+   - Telegram Bot;
+   - Gmail;
+   - Google Sheets;
+   - Bitrix24 webhook или другой CRM API, если проект этого требует.
+5. Замени demo-значения:
+   - email;
+   - Telegram chat_id;
+   - webhook URL;
+   - Google Sheets document ID;
+   - CRM endpoint.
+6. Запусти workflow в тестовом режиме.
+7. После проверки активируй workflow.
+
+---
+
+## Безопасность
+
+В публичных версиях workflow должны быть удалены:
+
+- реальные API keys;
+- webhook tokens;
+- Telegram chat_id;
+- личные email;
+- реальные CRM endpoints;
+- credentials blocks;
+- персональные данные.
+
+---
+
+## Контакты
 
 - Telegram: [@Andyyy_Randyyy](https://t.me/Andyyy_Randyyy)
-- GitHub profile: [Andy-randy](https://github.com/Andy-randy)
+- GitHub: [Andy-randy](https://github.com/Andy-randy)
 
 ---
 
 ## 🇬🇧 In English
 
-### Featured case studies
+## Repository Structure
 
-| # | Case | Core idea | Stack |
-|---|------|-----------|-------|
-| 1 | [AI assistant that closes orders on its own](./01-ai-sales-assistant/) | The LLM decides when to close the deal | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [Lead funnel with an LLM classifier](./02-lead-funnel/) | Groq classifier + Switch to 3 different actions: from cold email to a deal in CRM | `n8n` · `Groq` · Webhook · `Gmail` · `Bitrix24` |
-| 3 | [Smart vacancy parser with LLM-based scoring](./03-hh-parser/) | A clean LLM / deterministic-logic split | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
+```text
+n8n-portfolio/
+├── 01-ai-sales-assistant/
+├── 02-lead-funnel/
+├── 03-hh-parser/
+├── other-projects/
+└── README.md
+```
 
-Each case lives in its own folder with a detailed bilingual README, the exported JSON, and screenshots.
+---
 
-### Other projects
+## Featured Case Studies
 
-Less formalised but working — in [`other-projects/`](./other-projects/) with exported JSON:
+| # | Project | What it does | Stack |
+|---|---------|--------------|-------|
+| 1 | [AI Sales Assistant](./01-ai-sales-assistant/) | Talks to customers in Telegram, collects details, and helps confirm orders | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
+| 2 | [Lead Funnel With LLM Classifier](./02-lead-funnel/) | Classifies leads as cold / warm / hot and routes them to different actions | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
+| 3 | [Smart Vacancy Parser](./03-hh-parser/) | Gets vacancies through API, filters them, and scores them with an LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 
-- RSS news digest
-- E-commerce order processing
-- HR onboarding with notifications
-- Financial monitoring
-- AI content repurposing
-- Customer booking bot
-- Notion API automations
+---
 
-### Stack
+## 1. AI Sales Assistant
 
-**Automation** `n8n` · webhooks · subworkflows · error handling · cron  
-**AI / LLM** `Groq` · `OpenAI` · prompt engineering · AI agents with memory  
-**Backend** `Python` · REST APIs · `Docker` · `Git`  
-**Data & tools** `Google Sheets` · `Notion API` · `Bitrix24` · `Telegram Bot API` · `HH.ru API`
+**Folder:** [`01-ai-sales-assistant`](./01-ai-sales-assistant/)
 
-### How to run a workflow
+A Telegram AI assistant that guides a customer through the sales flow: answers questions, collects required data, and decides when the order can be confirmed.
 
-1. Download the `workflow.json` from the case folder.
-2. In n8n, go to **Workflows → Import from File** and select the JSON.
-3. Configure credentials: Telegram Bot, Groq API key, Google Sheets OAuth, etc. — the exact list depends on the case and is listed in each project's README.
-4. Activate the workflow.
+### Core Logic
 
-### Contacts
+```text
+Telegram Trigger
+→ AI Agent + Simple Memory
+→ IF
+├── follow-up question to customer
+└── order confirmation → Google Sheets → Telegram manager notification
+```
+
+### What this project demonstrates
+
+- AI Agent usage in n8n;
+- Simple Memory;
+- dialog logic without hard-coded keyword rules;
+- structured data logging in Google Sheets;
+- manager notification.
+
+---
+
+## 2. Lead Funnel With LLM Classifier
+
+**Folder:** [`02-lead-funnel`](./02-lead-funnel/)
+
+A workflow for automatic incoming lead processing. The system receives a lead through Webhook, analyzes it with an AI Agent, and routes it based on lead temperature.
+
+### Core Logic
+
+```text
+Webhook
+→ AI Agent
+→ Code node
+→ Switch
+├── cold lead → email + Google Sheets
+├── warm lead → email + Google Sheets
+├── hot lead → Telegram manager ping + Bitrix24 CRM
+└── fallback → Telegram error notification
+```
+
+### What this project demonstrates
+
+- AI-based lead classification;
+- JSON normalization through a Code node;
+- budget extraction from request text;
+- routing with Switch;
+- Bitrix24 REST API integration;
+- fallback handling for invalid AI output.
+
+---
+
+## 3. Smart Vacancy Parser With LLM Scoring
+
+**Folder:** [`03-hh-parser`](./03-hh-parser/)
+
+A workflow for job search and initial vacancy scoring. It gets vacancies through the HH.ru API, normalizes the data, evaluates each vacancy with AI, and sends the result to Telegram.
+
+### Core Logic
+
+```text
+Manual / Schedule Trigger
+→ HH.ru API
+→ Code node
+→ Loop Over Items
+→ AI Agent
+→ IF
+→ Aggregate
+→ Telegram digest
+```
+
+### What this project demonstrates
+
+- external API usage;
+- array processing;
+- separation between AI evaluation and deterministic filtering;
+- digest generation with Aggregate + Code;
+- Telegram notifications.
+
+---
+
+## Other Projects
+
+The [`other-projects`](./other-projects/) folder contains less formalized but working workflows:
+
+- RSS / news digest automation;
+- e-commerce order processing;
+- HR onboarding workflow;
+- financial monitoring;
+- AI content repurposing;
+- customer support routing;
+- Notion API automations.
+
+---
+
+## Stack
+
+**Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
+**AI / LLM:** `Groq` · AI Agent · Simple Memory · structured JSON output · prompt engineering  
+**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API`  
+**Code:** `JavaScript` Code node · JSON parsing · data normalization  
+**Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
+
+---
+
+## How to Run a Workflow
+
+1. Open the project folder.
+2. Download `workflow.json`.
+3. In n8n, go to **Workflows → Import from File**.
+4. Connect your own credentials:
+   - Groq API;
+   - Telegram Bot;
+   - Gmail;
+   - Google Sheets;
+   - Bitrix24 webhook or another CRM API if required by the project.
+5. Replace demo values:
+   - email;
+   - Telegram chat_id;
+   - webhook URL;
+   - Google Sheets document ID;
+   - CRM endpoint.
+6. Run the workflow in test mode.
+7. Activate it after testing.
+
+---
+
+## Security
+
+Public workflow versions should not contain:
+
+- real API keys;
+- webhook tokens;
+- Telegram chat_id;
+- personal emails;
+- real CRM endpoints;
+- credentials blocks;
+- personal data.
+
+---
+
+## Contacts
 
 - Telegram: [@Andyyy_Randyyy](https://t.me/Andyyy_Randyyy)
-- GitHub profile: [Andy-randy](https://github.com/Andy-randy)
+- GitHub: [Andy-randy](https://github.com/Andy-randy)
