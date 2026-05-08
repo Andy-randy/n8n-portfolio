@@ -1,4 +1,3 @@
-[README_n8n_portfolio_rewritten.md](https://github.com/user-attachments/files/27321922/README_n8n_portfolio_rewritten.md)
 # n8n Portfolio · Daria Lesnikova
 
 Портфолио workflow-проектов на **n8n** с интеграцией **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24 и Notion**.
