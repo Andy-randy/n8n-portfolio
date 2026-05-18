@@ -9,13 +9,13 @@
         -320,
         -64
       ],
-      "id": "9a0c921c-4876-420e-a61d-ce12324ad7ff",
+      "id": "REDACTED_NODE_ID_0",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.notion.com/v1/databases/33bf931d0b4480019535f6067f3fa066/query",
+        "url": "https://api.notion.com/v1/databases/REDACTED_NOTION_DATABASE_ID/query",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -45,12 +45,12 @@
         -112,
         -64
       ],
-      "id": "1bf531d5-97b7-418d-bf92-134ebb844c68",
+      "id": "REDACTED_NODE_ID_1",
       "name": "HTTP Request"
     },
     {
       "parameters": {
-        "jsCode": "const pages = $input.first().json.results;\nconst webhookBase = \"https://unringing-turfiest-kirby.ngrok-free.dev/webhook/2d7e29bd-36a2-4830-b0e1-2185172a2462\";\nconst notionToken = \"YOUR_API_KEY_HERE\";\n\nreturn pages.map(page => {\n  const pageId = page.id;\n  const topic = page.properties.Name.title[0].plain_text;\n  const buttonUrl = `${webhookBase}?topic=${encodeURIComponent(topic)}&page_id=${pageId.replace(/-/g, '')}`;\n  \n  const body = JSON.stringify({\n    children: [{\n      object: \"block\",\n      type: \"paragraph\",\n      paragraph: {\n        rich_text: [{\n          type: \"text\",\n          text: {\n            content: \"▶ Объясни тему\",\n            link: { url: buttonUrl }\n          }\n        }]\n      }\n    }]\n  });\n\n  return { \n    json: { \n      page_id: pageId,\n      topic: topic,\n      notion_blocks_url: `https://api.notion.com/v1/blocks/${pageId}/children`,\n      button_url: buttonUrl,\n      body: body,\n      token: notionToken\n    } \n  };\n});"
+        "jsCode": "const pages = $input.first().json.results;\nconst webhookBase = \"REDACTED_N8N_WEBHOOK_BASE_URL\";\nconst notionToken = \"YOUR_API_KEY_HERE\";\n\nreturn pages.map(page => {\n  const pageId = page.id;\n  const topic = page.properties.Name.title[0].plain_text;\n  const buttonUrl = `${webhookBase}?topic=${encodeURIComponent(topic)}&page_id=${pageId.replace(/-/g, '')}`;\n  \n  const body = JSON.stringify({\n    children: [{\n      object: \"block\",\n      type: \"paragraph\",\n      paragraph: {\n        rich_text: [{\n          type: \"text\",\n          text: {\n            content: \"▶ Объясни тему\",\n            link: { url: buttonUrl }\n          }\n        }]\n      }\n    }]\n  });\n\n  return { \n    json: { \n      page_id: pageId,\n      topic: topic,\n      notion_blocks_url: `https://api.notion.com/v1/blocks/${pageId}/children`,\n      button_url: buttonUrl,\n      body: body,\n      token: notionToken\n    } \n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -58,7 +58,7 @@
         96,
         -64
       ],
-      "id": "688981c6-72f3-4c3e-b912-3c91085f8876",
+      "id": "REDACTED_NODE_ID_2",
       "name": "Code in JavaScript"
     },
     {
@@ -93,12 +93,12 @@
         304,
         -64
       ],
-      "id": "cc9f3a67-6e4e-4f4c-b15b-751ca0c43e29",
+      "id": "REDACTED_NODE_ID_3",
       "name": "Append a block",
       "credentials": {
         "notionApi": {
-          "id": "ewSm0eqzyCtiAjCl",
-          "name": "Notion account"
+          "id": "REDACTED_NOTIONAPI_CREDENTIAL_ID",
+          "name": "REDACTED_NOTIONAPI_CREDENTIAL"
         }
       }
     }
@@ -148,11 +148,11 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "52e1b956-6b13-4559-a22a-fcc391bb0432",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "qADh6JvIf8zTUz6l",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }

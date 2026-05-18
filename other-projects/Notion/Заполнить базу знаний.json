@@ -9,7 +9,7 @@
         -368,
         0
       ],
-      "id": "759b7b51-1308-4300-8ad2-744d28065eac",
+      "id": "REDACTED_NODE_ID_0",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -22,7 +22,7 @@
         -128,
         0
       ],
-      "id": "4912555e-f4c6-4d38-8a13-b01405a59be2",
+      "id": "REDACTED_NODE_ID_1",
       "name": "Code in JavaScript"
     },
     {
@@ -49,7 +49,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={\"parent\":{\"database_id\":\"33bf931d0b4480019535f6067f3fa066\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.name }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.block }}\"}}}}",
+        "body": "={\"parent\":{\"database_id\":\"REDACTED_NOTION_DATABASE_ID\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.name }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.block }}\"}}}}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -58,7 +58,7 @@
         128,
         0
       ],
-      "id": "e01cc2ba-5ac3-4030-a9de-1ed2dae9d2ed",
+      "id": "REDACTED_NODE_ID_2",
       "name": "HTTP Request"
     }
   ],
@@ -92,10 +92,10 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "d92d4f12-8b16-475e-8588-044b12535b4a",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "uHfIxKzlj2g9WKNS",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }

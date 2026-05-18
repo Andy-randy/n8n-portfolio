@@ -12,17 +12,17 @@
         },
         "documentId": {
           "__rl": true,
-          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "value": "REDACTED_RESOURCE_ID",
           "mode": "list",
-          "cachedResultName": "Тестовая для n8n",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "sheetName": {
           "__rl": true,
           "value": 1642490750,
           "mode": "list",
-          "cachedResultName": "HR",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1642490750"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "event": "rowAdded",
         "options": {}
@@ -33,12 +33,12 @@
         -464,
         0
       ],
-      "id": "d2f7b1c3-f81c-410e-9b00-b8c46fbe2252",
+      "id": "REDACTED_NODE_ID_0",
       "name": "Google Sheets Trigger",
       "credentials": {
         "googleSheetsTriggerOAuth2Api": {
-          "id": "YzcBscfxe4ii2hZz",
-          "name": "Google Sheets Trigger account"
+          "id": "REDACTED_GOOGLESHEETSTRIGGEROAUTH2API_CREDENTIAL_ID",
+          "name": "REDACTED_GOOGLESHEETSTRIGGEROAUTH2API_CREDENTIAL"
         }
       }
     },
@@ -56,13 +56,13 @@
         -320,
         0
       ],
-      "id": "4e3dd3de-3515-428d-b8c3-b1f7638141d6",
+      "id": "REDACTED_NODE_ID_1",
       "name": "Send a message",
-      "webhookId": "a433c839-048e-40cb-a445-a1939e2d5092",
+      "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "gmailOAuth2": {
-          "id": "BUm4qnzFno1tLMtq",
-          "name": "Gmail account"
+          "id": "REDACTED_GMAILOAUTH2_CREDENTIAL_ID",
+          "name": "REDACTED_GMAILOAUTH2_CREDENTIAL"
         }
       }
     },
@@ -81,13 +81,13 @@
         -176,
         0
       ],
-      "id": "091bc095-aa5a-4f9e-aaf3-7251a862df6c",
+      "id": "REDACTED_NODE_ID_2",
       "name": "Send a text message",
-      "webhookId": "c1bf6943-1ddc-4825-8a4a-c68d1f708d61",
+      "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "lUdskRcMijpMhuX7",
-          "name": "Telegram account"
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
         }
       }
     },
@@ -102,7 +102,7 @@
           },
           "conditions": [
             {
-              "id": "40a1ca59-f103-4222-8003-8d42c3a87032",
+              "id": "REDACTED_INTERNAL_ID",
               "leftValue": "={{ $('Google Sheets Trigger').item.json['Роль'] }}",
               "rightValue": "developer",
               "operator": {
@@ -121,7 +121,7 @@
         -32,
         0
       ],
-      "id": "249f7b58-4300-4fbe-b29f-9dde0ad7c61e",
+      "id": "REDACTED_NODE_ID_3",
       "name": "If"
     },
     {
@@ -136,7 +136,7 @@
         128,
         -96
       ],
-      "id": "8015baa7-c7be-46b0-900a-f1a91716ad9c",
+      "id": "REDACTED_NODE_ID_4",
       "name": "Create a card"
     },
     {
@@ -151,7 +151,7 @@
         128,
         96
       ],
-      "id": "37850a9f-00e6-4084-9edf-e31d9f09bc6d",
+      "id": "REDACTED_NODE_ID_5",
       "name": "Create a card1"
     },
     {
@@ -162,7 +162,7 @@
         304,
         96
       ],
-      "id": "193b946f-34e3-4a47-9314-8d668002fb95",
+      "id": "REDACTED_NODE_ID_6",
       "name": "Merge"
     },
     {
@@ -170,17 +170,17 @@
         "operation": "update",
         "documentId": {
           "__rl": true,
-          "value": "1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I",
+          "value": "REDACTED_RESOURCE_ID",
           "mode": "list",
-          "cachedResultName": "Тестовая для n8n",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit?usp=drivesdk"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "sheetName": {
           "__rl": true,
           "value": 1642490750,
           "mode": "list",
-          "cachedResultName": "HR",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zcuW1uFnejN6moO9k6x1YzZaKeYf2sqDisPZNsT8O6I/edit#gid=1642490750"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -271,12 +271,12 @@
         448,
         96
       ],
-      "id": "17562d01-1ebb-4287-ae0f-3d08bf5171d2",
+      "id": "REDACTED_NODE_ID_7",
       "name": "Update row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "cmQQOb8PzYi6Lx0K",
-          "name": "Google Sheets account"
+          "id": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL_ID",
+          "name": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL"
         }
       }
     },
@@ -295,9 +295,9 @@
         272,
         -96
       ],
-      "id": "3dd3afce-6840-4994-8633-f1dddcc9b37f",
+      "id": "REDACTED_NODE_ID_8",
       "name": "Get a user's repositories",
-      "webhookId": "83b7a066-acd0-485b-9ed0-f6a749f77f65"
+      "webhookId": "REDACTED_WEBHOOK_ID"
     }
   ],
   "pinData": {},
@@ -403,11 +403,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "932e98b4-4c85-4352-95ed-3209b6016b2b",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "Fx5yKeDLodGnBE1F",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }

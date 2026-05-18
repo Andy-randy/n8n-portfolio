@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "path": "bea5f6fe-c219-45c0-b19f-179a293069cb",
+        "path": "REDACTED_WEBHOOK_PATH",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -12,9 +12,9 @@
         0,
         0
       ],
-      "id": "dc101c51-e57d-4129-b1f7-3f09e4b2fd6d",
+      "id": "REDACTED_NODE_ID_0",
       "name": "Webhook",
-      "webhookId": "bea5f6fe-c219-45c0-b19f-179a293069cb"
+      "webhookId": "REDACTED_WEBHOOK_ID"
     },
     {
       "parameters": {
@@ -40,7 +40,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={\"parent\":{\"database_id\":\"33bf931d0b4480019535f6067f3fa066\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.query.topic }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.query.block }}\"}}}}",
+        "body": "={\"parent\":{\"database_id\":\"REDACTED_NOTION_DATABASE_ID\"},\"properties\":{\"Name\":{\"title\":[{\"text\":{\"content\":\"{{ $json.query.topic }}\"}}]},\"Блок\":{\"select\":{\"name\":\"{{ $json.query.block }}\"}}}}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -49,7 +49,7 @@
         208,
         0
       ],
-      "id": "fd690eaa-de1e-48b0-bbb8-7488f1b11da5",
+      "id": "REDACTED_NODE_ID_1",
       "name": "HTTP Request"
     }
   ],
@@ -73,10 +73,10 @@
     "binaryMode": "separate",
     "availableInMCP": true
   },
-  "versionId": "800a7ddd-bf36-4b6d-bd3b-a4eeedece2b8",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "tIQxukQuG4159tl8",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }

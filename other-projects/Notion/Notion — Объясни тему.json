@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "path": "2d7e29bd-36a2-4830-b0e1-2185172a2462",
+        "path": "REDACTED_WEBHOOK_PATH",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -12,9 +12,9 @@
         0,
         0
       ],
-      "id": "7ea32c81-6bc8-44b8-bdfc-87059ef50ca9",
+      "id": "REDACTED_NODE_ID_0",
       "name": "Webhook",
-      "webhookId": "2d7e29bd-36a2-4830-b0e1-2185172a2462"
+      "webhookId": "REDACTED_WEBHOOK_ID"
     },
     {
       "parameters": {
@@ -44,7 +44,7 @@
         208,
         0
       ],
-      "id": "f5b8a830-8a46-4b7a-860b-c0de6eff1676",
+      "id": "REDACTED_NODE_ID_1",
       "name": "HTTP Request"
     },
     {
@@ -80,7 +80,7 @@
         624,
         0
       ],
-      "id": "bc8f1bb4-eb1e-4735-889e-754b05fbe5e6",
+      "id": "REDACTED_NODE_ID_2",
       "name": "HTTP Request1"
     },
     {
@@ -93,7 +93,7 @@
         416,
         0
       ],
-      "id": "b6beb295-1dd9-4c81-ba4c-19badf847c1f",
+      "id": "REDACTED_NODE_ID_3",
       "name": "Code in JavaScript"
     }
   ],
@@ -138,10 +138,10 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "778d0d34-0b59-45c7-a649-1864ab7db345",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "aEspIfDuWHODzOHU",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }

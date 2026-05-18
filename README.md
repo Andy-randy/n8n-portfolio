@@ -21,6 +21,7 @@ n8n-portfolio/
 ├── 01-ai-sales-assistant/
 ├── 02-lead-funnel/
 ├── 03-hh-parser/
+├── 04-rag-telegram-faq-bot/
 ├── other-projects/
 └── README.md
 ```
@@ -34,6 +35,7 @@ n8n-portfolio/
 | 1 | [AI-ассистент продаж](./01-ai-sales-assistant/) | Ведёт клиента в Telegram, собирает данные и помогает оформить заказ | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
 | 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Делит заявки на холодные / тёплые / горячие и запускает разные сценарии | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Умный парсер вакансий](./03-hh-parser/) | Получает вакансии через API, фильтрует и оценивает их через LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
+| 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Отвечает на вопросы в Telegram по базе знаний из PDF через Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 
 ---
 
@@ -122,6 +124,38 @@ Manual / Schedule Trigger
 
 ---
 
+## 4. RAG Telegram FAQ Bot
+
+**Папка:** [`04-rag-telegram-faq-bot`](./04-rag-telegram-faq-bot/)
+
+Telegram FAQ-бот на базе RAG: отдельный workflow загружает PDF-документы в Supabase Vector Store, а второй workflow принимает вопросы пользователей, ищет релевантные фрагменты и отвечает через Groq.
+
+### Ключевая логика
+
+```text
+Google Drive PDF
+→ Extract From File
+→ Embeddings
+→ Supabase Vector Store
+
+Telegram Trigger
+→ AI Agent
+→ Supabase Vector Store Tool
+→ Groq Chat Model
+→ Telegram Response
+→ Google Sheets Logging
+```
+
+### Что показывает проект
+
+- RAG-архитектуру в n8n;
+- раздельные ingest/query workflow;
+- работу с Supabase Vector Store и embeddings;
+- Telegram-бота с `/start` onboarding;
+- логирование вопросов и ответов в Google Sheets.
+
+---
+
 ## Остальные проекты
 
 В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
@@ -198,6 +232,7 @@ n8n-portfolio/
 ├── 01-ai-sales-assistant/
 ├── 02-lead-funnel/
 ├── 03-hh-parser/
+├── 04-rag-telegram-faq-bot/
 ├── other-projects/
 └── README.md
 ```
@@ -211,6 +246,7 @@ n8n-portfolio/
 | 1 | [AI Sales Assistant](./01-ai-sales-assistant/) | Talks to customers in Telegram, collects details, and helps confirm orders | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
 | 2 | [Lead Funnel With LLM Classifier](./02-lead-funnel/) | Classifies leads as cold / warm / hot and routes them to different actions | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Smart Vacancy Parser](./03-hh-parser/) | Gets vacancies through API, filters them, and scores them with an LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
+| 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Answers Telegram questions from a PDF knowledge base using Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 
 ---
 
@@ -296,6 +332,38 @@ Manual / Schedule Trigger
 - separation between AI evaluation and deterministic filtering;
 - digest generation with Aggregate + Code;
 - Telegram notifications.
+
+---
+
+## 4. RAG Telegram FAQ Bot
+
+**Folder:** [`04-rag-telegram-faq-bot`](./04-rag-telegram-faq-bot/)
+
+A Telegram FAQ bot built with RAG: one workflow ingests PDF documents into Supabase Vector Store, and another receives user questions, retrieves relevant chunks, and answers through Groq.
+
+### Core Logic
+
+```text
+Google Drive PDF
+→ Extract From File
+→ Embeddings
+→ Supabase Vector Store
+
+Telegram Trigger
+→ AI Agent
+→ Supabase Vector Store Tool
+→ Groq Chat Model
+→ Telegram Response
+→ Google Sheets Logging
+```
+
+### What this project demonstrates
+
+- RAG architecture in n8n;
+- separate ingest/query workflows;
+- Supabase Vector Store and embeddings;
+- Telegram bot onboarding with `/start`;
+- question and answer logging in Google Sheets.
 
 ---
 

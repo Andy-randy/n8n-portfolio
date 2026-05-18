@@ -232,17 +232,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "REDACTED_GOOGLE_SHEETS_DOCUMENT_ID",
+          "value": "REDACTED_RESOURCE_ID",
           "mode": "list",
-          "cachedResultName": "REDACTED_GOOGLE_SHEETS_DOCUMENT_NAME",
-          "cachedResultUrl": "REDACTED_GOOGLE_SHEETS_URL"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "REDACTED_GOOGLE_SHEETS_SHEET_NAME",
-          "cachedResultUrl": "REDACTED_GOOGLE_SHEETS_URL"
+          "cachedResultName": "REDACTED_RESOURCE_NAME",
+          "cachedResultUrl": "REDACTED_RESOURCE_URL"
         },
         "columns": {
           "mappingMode": "defineBelow",

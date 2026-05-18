@@ -9,7 +9,7 @@
         -400,
         0
       ],
-      "id": "7ddfced5-f872-4e4f-9497-408e72365dec",
+      "id": "REDACTED_NODE_ID_0",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -48,7 +48,7 @@
         -240,
         0
       ],
-      "id": "6b6626dc-1046-4569-b170-19d07add2f42",
+      "id": "REDACTED_NODE_ID_1",
       "name": "HTTP Request"
     },
     {
@@ -65,7 +65,7 @@
         240,
         0
       ],
-      "id": "4c1973ea-dc9e-43c8-b33b-4e3a4ddcab0d",
+      "id": "REDACTED_NODE_ID_2",
       "name": "AI Agent"
     },
     {
@@ -81,12 +81,12 @@
         240,
         192
       ],
-      "id": "90b28a83-6fcf-4aef-a76c-b77e052db863",
+      "id": "REDACTED_NODE_ID_3",
       "name": "Groq Chat Model",
       "credentials": {
         "groqApi": {
-          "id": "CahgVi1GwdImfmVL",
-          "name": "Groq account"
+          "id": "REDACTED_GROQAPI_CREDENTIAL_ID",
+          "name": "REDACTED_GROQAPI_CREDENTIAL"
         }
       }
     },
@@ -100,7 +100,7 @@
         -80,
         0
       ],
-      "id": "640660a3-af86-4a15-894a-5029ce27d221",
+      "id": "REDACTED_NODE_ID_4",
       "name": "Code in JavaScript",
       "alwaysOutputData": true
     },
@@ -115,7 +115,7 @@
         80,
         0
       ],
-      "id": "76f24831-4439-4efe-a550-ed2c6717651c",
+      "id": "REDACTED_NODE_ID_5",
       "name": "Loop Over Items"
     },
     {
@@ -129,7 +129,7 @@
           },
           "conditions": [
             {
-              "id": "aa72a452-ecd8-4f66-97ea-9b2cc4911a65",
+              "id": "REDACTED_INTERNAL_ID",
               "leftValue": "={{ $('Code in JavaScript').item.json['зарплата'] }}",
               "rightValue": 100000,
               "operator": {
@@ -138,7 +138,7 @@
               }
             },
             {
-              "id": "9fa8990c-902e-4349-b395-09e9ec4d2163",
+              "id": "REDACTED_INTERNAL_ID",
               "leftValue": "={{ $('Code in JavaScript').item.json['формат'] }}",
               "rightValue": "Удаленная работа",
               "operator": {
@@ -157,7 +157,7 @@
         512,
         0
       ],
-      "id": "8a87fd2e-a5ce-4092-99d0-16c27febc5f1",
+      "id": "REDACTED_NODE_ID_6",
       "name": "If"
     },
     {
@@ -165,31 +165,31 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7b5cc5d5-d65f-4dfb-bc22-fd97d2a08fba",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "название",
               "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
               "type": "string"
             },
             {
-              "id": "3aab1c9c-2834-4b14-9e4e-c438a05a7aa7",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "компания",
               "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
               "type": "string"
             },
             {
-              "id": "16009c2d-c1d4-449a-b857-85514d628cc1",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "зарплата",
               "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
               "type": "number"
             },
             {
-              "id": "42b8af5a-4df8-4357-9973-c878975a2581",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "формат",
               "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
               "type": "string"
             },
             {
-              "id": "316e4757-2bf9-49ad-8253-d627544cdc1e",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "ссылка",
               "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
               "type": "string"
@@ -204,7 +204,7 @@
         512,
         -176
       ],
-      "id": "6f1a561e-306e-42a8-b65e-ae2fbd9d2e38",
+      "id": "REDACTED_NODE_ID_7",
       "name": "Edit Fields"
     },
     {
@@ -219,13 +219,13 @@
         1136,
         -176
       ],
-      "id": "8ffb3a0b-6652-4dc4-b724-17cf17591737",
+      "id": "REDACTED_NODE_ID_8",
       "name": "Send a text message",
-      "webhookId": "b7965126-628b-4f2b-a531-fe32ce227c44",
+      "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "lUdskRcMijpMhuX7",
-          "name": "Telegram account"
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
         }
       }
     },
@@ -241,13 +241,13 @@
         1328,
         16
       ],
-      "id": "4c642649-42e8-44b9-88f0-7336c356cdd8",
+      "id": "REDACTED_NODE_ID_9",
       "name": "Send a text message1",
-      "webhookId": "b7965126-628b-4f2b-a531-fe32ce227c44",
+      "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "lUdskRcMijpMhuX7",
-          "name": "Telegram account"
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
         }
       }
     },
@@ -262,7 +262,7 @@
         720,
         -176
       ],
-      "id": "3a86acb6-8d31-45c5-ae2a-7b6b1a659f79",
+      "id": "REDACTED_NODE_ID_10",
       "name": "Aggregate"
     },
     {
@@ -275,7 +275,7 @@
         928,
         -176
       ],
-      "id": "db385c8e-9e73-4b9f-9503-07efc10c0c8b",
+      "id": "REDACTED_NODE_ID_11",
       "name": "Code in JavaScript1"
     },
     {
@@ -289,7 +289,7 @@
         912,
         16
       ],
-      "id": "1e3a4588-9bca-4668-bf14-e998062c7935",
+      "id": "REDACTED_NODE_ID_12",
       "name": "Aggregate1"
     },
     {
@@ -302,7 +302,7 @@
         1104,
         16
       ],
-      "id": "50ffe02b-772b-4a78-8dab-b7bffcea04d6",
+      "id": "REDACTED_NODE_ID_13",
       "name": "Code in JavaScript2"
     },
     {
@@ -310,31 +310,31 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7b5cc5d5-d65f-4dfb-bc22-fd97d2a08fba",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "название",
               "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
               "type": "string"
             },
             {
-              "id": "3aab1c9c-2834-4b14-9e4e-c438a05a7aa7",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "компания",
               "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
               "type": "string"
             },
             {
-              "id": "16009c2d-c1d4-449a-b857-85514d628cc1",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "зарплата",
               "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
               "type": "number"
             },
             {
-              "id": "42b8af5a-4df8-4357-9973-c878975a2581",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "формат",
               "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
               "type": "string"
             },
             {
-              "id": "316e4757-2bf9-49ad-8253-d627544cdc1e",
+              "id": "REDACTED_INTERNAL_ID",
               "name": "ссылка",
               "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
               "type": "string"
@@ -349,7 +349,7 @@
         720,
         16
       ],
-      "id": "35642786-2ec9-48e7-8c38-fe30cb74207b",
+      "id": "REDACTED_NODE_ID_14",
       "name": "Edit Fields1"
     }
   ],
@@ -518,11 +518,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "7512d678-af48-4a62-b156-962332a8f483",
+  "versionId": "REDACTED_VERSION_ID",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
   },
-  "id": "Yb1XuOTJgSxynsXP",
+  "id": "REDACTED_WORKFLOW_ID",
   "tags": []
 }
