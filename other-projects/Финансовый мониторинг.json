@@ -96,7 +96,7 @@
     },
     {
       "parameters": {
-        "chatId": "7902494464",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "=Ваш расход: {{ $('Code in JavaScript').item.json['расход'] }}, доход: {{ $('Code in JavaScript').item.json['доход'] }}, прибыль составляет: {{ $('Code in JavaScript').item.json['прибыль'] }}",
         "additionalFields": {
           "appendAttribution": false
@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "chatId": "7902494464",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "Расход превышен! Остановись!",
         "additionalFields": {
           "appendAttribution": false
@@ -177,7 +177,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 2144297555,
+          "value": "REDACTED_GOOGLE_SHEET_GID",
           "mode": "list",
           "cachedResultName": "REDACTED_RESOURCE_NAME",
           "cachedResultUrl": "REDACTED_RESOURCE_URL"

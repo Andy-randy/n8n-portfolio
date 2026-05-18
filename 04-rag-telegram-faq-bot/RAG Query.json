@@ -239,7 +239,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
+          "value": "REDACTED_GOOGLE_SHEET_GID",
           "mode": "list",
           "cachedResultName": "REDACTED_RESOURCE_NAME",
           "cachedResultUrl": "REDACTED_RESOURCE_URL"

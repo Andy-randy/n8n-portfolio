@@ -209,7 +209,7 @@
     },
     {
       "parameters": {
-        "chatId": "7902494464",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "=Вакансии, к которым стоит присмотреться! {{ $json['текст'] }}",
         "additionalFields": {}
       },
@@ -231,7 +231,7 @@
     },
     {
       "parameters": {
-        "chatId": "7902494464",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "=А это мутные! {{ $json[\"текст\"] }}",
         "additionalFields": {}
       },

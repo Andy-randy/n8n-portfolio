@@ -113,7 +113,7 @@
     },
     {
       "parameters": {
-        "chatId": "987521654",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "={{ $json.result.text }}",
         "additionalFields": {
           "appendAttribution": false,

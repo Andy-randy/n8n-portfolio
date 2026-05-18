@@ -19,7 +19,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1642490750,
+          "value": "REDACTED_GOOGLE_SHEET_GID",
           "mode": "list",
           "cachedResultName": "REDACTED_RESOURCE_NAME",
           "cachedResultUrl": "REDACTED_RESOURCE_URL"
@@ -68,7 +68,7 @@
     },
     {
       "parameters": {
-        "chatId": "7902494464",
+        "chatId": "REDACTED_TELEGRAM_CHAT_ID",
         "text": "=🚀 Новый сотрудник!  👤 {{ $('Google Sheets Trigger').item.json['Имя'] }} 📧 {{ $('Google Sheets Trigger').item.json.Email }} 📋 Роль: {{ $('Google Sheets Trigger').item.json['Роль'] }} 🏢 Отдел: {{ $('Google Sheets Trigger').item.json['Отдел'] }} 📅 Старт: {{ $('Google Sheets Trigger').item.json['Дата старта'] }}  Задачи: • Создать доступы • Добавить в каналы • Провести вводный инструктаж",
         "additionalFields": {
           "appendAttribution": false,
@@ -177,7 +177,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1642490750,
+          "value": "REDACTED_GOOGLE_SHEET_GID",
           "mode": "list",
           "cachedResultName": "REDACTED_RESOURCE_NAME",
           "cachedResultUrl": "REDACTED_RESOURCE_URL"
