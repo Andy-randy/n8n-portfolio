@@ -1,0 +1,436 @@
+{
+  "name": "RAG Query",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "question",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.question }}",
+        "options": {
+          "systemMessage": "Ты — помощник по вопросам работы утюгов.\n\nОБЯЗАТЕЛЬНО используй инструмент базы знаний Supabase Vector Store для каждого вопроса пользователя.\n\nОтвечай только на основе информации, найденной в базе знаний.\n\nЕсли инструмент не нашёл подходящую информацию — ответь:\n\"В базе знаний нет информации по этому вопросу.\"\n\nНе отвечай из общих знаний.\nНе придумывай.\nОтвечай кратко и по делу на русском языке."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        16,
+        224
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "REDACTED_GROQAPI_CREDENTIAL_ID",
+          "name": "REDACTED_GROQAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "База знаний по частым проблемам с утюгами и способам их решения. Используй этот инструмент всегда, когда пользователь спрашивает про утюги, поломки, пар, накипь, протекание, пятна, температуру, подошву утюга или глажку.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 5,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        192
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "REDACTED_SUPABASEAPI_CREDENTIAL_ID",
+          "name": "REDACTED_SUPABASEAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "sentence-transformers/all-MiniLM-L6-v2",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        192,
+        320
+      ],
+      "id": "REDACTED_NODE_ID_4",
+      "name": "Embeddings HuggingFace Inference",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "REDACTED_HUGGINGFACEAPI_CREDENTIAL_ID",
+          "name": "REDACTED_HUGGINGFACEAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -560,
+        -16
+      ],
+      "id": "REDACTED_NODE_ID_5",
+      "name": "Telegram Trigger",
+      "webhookId": "REDACTED_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_6",
+      "name": "Send a text message",
+      "webhookId": "REDACTED_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "REDACTED_INTERNAL_ID"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Start"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "REDACTED_NODE_ID_7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "👋 Добро пожаловать! Я AI-ассистент по базе знаний об использовании утюгов. Я могу ответить на вопросы о глажке, уходе за подошвой утюга, прилипании ткани, царапинах, паре, накипи и безопасном использовании. Просто отправьте ваш вопрос сообщением.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        -176
+      ],
+      "id": "REDACTED_NODE_ID_8",
+      "name": "Send a text message1",
+      "webhookId": "REDACTED_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "REDACTED_GOOGLE_SHEETS_DOCUMENT_NAME",
+          "cachedResultUrl": "REDACTED_GOOGLE_SHEETS_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "REDACTED_GOOGLE_SHEETS_SHEET_NAME",
+          "cachedResultUrl": "REDACTED_GOOGLE_SHEETS_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "User ID": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "Имя": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}",
+            "Вопрос": "={{ $('Telegram Trigger').item.json.message.text }}",
+            "Ответ": "={{ $('AI Agent').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User ID",
+              "displayName": "User ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Вопрос",
+              "displayName": "Вопрос",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ответ",
+              "displayName": "Ответ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL_ID",
+          "name": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings HuggingFace Inference": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "REDACTED_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REDACTED_N8N_INSTANCE_ID"
+  },
+  "id": "REDACTED_WORKFLOW_ID",
+  "tags": []
+}
