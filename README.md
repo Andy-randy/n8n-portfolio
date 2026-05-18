@@ -173,8 +173,8 @@ Telegram Trigger
 ## Стек
 
 **Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
-**AI / LLM:** `Groq` · AI Agent · Simple Memory · structured JSON output · prompt engineering  
-**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API`  
+**AI / LLM:** `Groq` · AI Agent · Simple Memory · RAG · Hugging Face Embeddings · structured JSON output · prompt engineering  
+**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API` · `Supabase` · `pgvector`  
 **Code:** `JavaScript` Code node · JSON parsing · data normalization  
 **Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
 
@@ -187,9 +187,11 @@ Telegram Trigger
 3. В n8n выбери **Workflows → Import from File**.
 4. Подключи свои credentials:
    - Groq API;
+   - Hugging Face API;
    - Telegram Bot;
    - Gmail;
    - Google Sheets;
+   - Supabase;
    - Bitrix24 webhook или другой CRM API, если проект этого требует.
 5. Замени demo-значения:
    - email;
@@ -384,8 +386,8 @@ The [`other-projects`](./other-projects/) folder contains less formalized but wo
 ## Stack
 
 **Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
-**AI / LLM:** `Groq` · AI Agent · Simple Memory · structured JSON output · prompt engineering  
-**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API`  
+**AI / LLM:** `Groq` · AI Agent · Simple Memory · RAG · Hugging Face Embeddings · structured JSON output · prompt engineering  
+**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API` · `Supabase` · `pgvector`  
 **Code:** `JavaScript` Code node · JSON parsing · data normalization  
 **Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
 
@@ -398,9 +400,11 @@ The [`other-projects`](./other-projects/) folder contains less formalized but wo
 3. In n8n, go to **Workflows → Import from File**.
 4. Connect your own credentials:
    - Groq API;
+   - Hugging Face API;
    - Telegram Bot;
    - Gmail;
    - Google Sheets;
+   - Supabase;
    - Bitrix24 webhook or another CRM API if required by the project.
 5. Replace demo values:
    - email;
