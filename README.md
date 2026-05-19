@@ -2,11 +2,11 @@
 
 Портфолио workflow-проектов на **n8n** с интеграцией **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24 и Notion**.
 
-Здесь собраны автоматизации, которые решают практические бизнес-задачи: обработка заявок, квалификация лидов, клиентская коммуникация, парсинг данных, уведомления и логирование.
+Здесь собраны автоматизации, которые решают практические бизнес-задачи: обработка заявок, квалификация лидов, клиентская коммуникация, парсинг данных, мониторинг цен, уведомления и логирование.
 
 An n8n workflow portfolio with **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24, and Notion** integrations.
 
-The repository contains practical automation projects for lead processing, AI qualification, customer communication, data parsing, notifications, and logging.
+The repository contains practical automation projects for lead processing, AI qualification, customer communication, data parsing, price monitoring, notifications, and logging.
 
 [🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
 
@@ -22,6 +22,7 @@ n8n-portfolio/
 ├── 02-lead-funnel/
 ├── 03-hh-parser/
 ├── 04-rag-telegram-faq-bot/
+├── 05-competitor-price-&-offer-monitoring-system/
 ├── other-projects/
 └── README.md
 ```
@@ -36,6 +37,7 @@ n8n-portfolio/
 | 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Делит заявки на холодные / тёплые / горячие и запускает разные сценарии | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Умный парсер вакансий](./03-hh-parser/) | Получает вакансии через API, фильтрует и оценивает их через LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Отвечает на вопросы в Telegram по базе знаний из PDF через Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
+| 5 | [Мониторинг цен конкурентов](./05-competitor-price-&-offer-monitoring-system/) | Собирает цены с сайтов конкурентов, сравнивает с историей и отправляет Telegram-отчёты | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 
 ---
 
@@ -156,6 +158,35 @@ Telegram Trigger
 
 ---
 
+## 5. Мониторинг цен и предложений конкурентов
+
+**Папка:** [`05-competitor-price-&-offer-monitoring-system`](./05-competitor-price-&-offer-monitoring-system/)
+
+Workflow для ежедневного мониторинга цен конкурентов. Система собирает товары с нескольких e-commerce сайтов, нормализует цены, сравнивает их с историей в Google Sheets и отправляет отчёты и алерты в Telegram.
+
+### Ключевая логика
+
+```text
+Schedule Trigger
+→ Competitors list
+→ HTTP Request
+→ HTML / custom enrichment
+→ Prepare products
+├── daily Telegram report
+└── Google Sheets history → price comparison → AI analysis → Telegram alert
+```
+
+### Что показывает проект
+
+- парсинг нескольких сайтов с разными CSS-селекторами;
+- обработку сайта, где цены подгружаются отдельным JSON-запросом;
+- нормализацию названий и цен;
+- сравнение с историей в Google Sheets;
+- Telegram-отчёты и алерты;
+- AI-анализ изменения цены.
+
+---
+
 ## Остальные проекты
 
 В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
@@ -235,6 +266,7 @@ n8n-portfolio/
 ├── 02-lead-funnel/
 ├── 03-hh-parser/
 ├── 04-rag-telegram-faq-bot/
+├── 05-competitor-price-&-offer-monitoring-system/
 ├── other-projects/
 └── README.md
 ```
@@ -249,6 +281,7 @@ n8n-portfolio/
 | 2 | [Lead Funnel With LLM Classifier](./02-lead-funnel/) | Classifies leads as cold / warm / hot and routes them to different actions | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Smart Vacancy Parser](./03-hh-parser/) | Gets vacancies through API, filters them, and scores them with an LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Answers Telegram questions from a PDF knowledge base using Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
+| 5 | [Competitor Price Monitoring](./05-competitor-price-&-offer-monitoring-system/) | Collects competitor prices, compares them with history, and sends Telegram reports | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 
 ---
 
@@ -366,6 +399,35 @@ Telegram Trigger
 - Supabase Vector Store and embeddings;
 - Telegram bot onboarding with `/start`;
 - question and answer logging in Google Sheets.
+
+---
+
+## 5. Competitor Price & Offer Monitoring
+
+**Folder:** [`05-competitor-price-&-offer-monitoring-system`](./05-competitor-price-&-offer-monitoring-system/)
+
+A workflow for daily competitor price monitoring. It collects products from multiple e-commerce websites, normalizes prices, compares them with Google Sheets history, and sends reports and alerts to Telegram.
+
+### Core Logic
+
+```text
+Schedule Trigger
+→ Competitors list
+→ HTTP Request
+→ HTML / custom enrichment
+→ Prepare products
+├── daily Telegram report
+└── Google Sheets history → price comparison → AI analysis → Telegram alert
+```
+
+### What this project demonstrates
+
+- parsing multiple websites with different CSS selectors;
+- handling a website where prices are loaded through a separate JSON request;
+- product name and price normalization;
+- historical comparison in Google Sheets;
+- Telegram reports and alerts;
+- AI analysis of price changes.
 
 ---
 
