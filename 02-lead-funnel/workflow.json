@@ -3,57 +3,150 @@
   "nodes": [
     {
       "parameters": {
-        "path": "REDACTED_WEBHOOK_PATH",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -640,
-        -64
-      ],
-      "id": "REDACTED_NODE_ID_0",
-      "name": "Webhook",
-      "webhookId": "REDACTED_WEBHOOK_ID"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.query }}",
-        "options": {
-          "systemMessage": "=Ты — эксперт по маркетингу и квалификации лидов. Твоя задача: проанализировать текст заявки клиента и классифицировать его по \"температуре\" — горячий, тёплый или холодный. Это маркетинговый термин: насколько клиент готов купить прямо сейчас.\n\nКритерии классификации (строго следуй им, без исключений):\n\n🔥 **Горячий клиент** (высокая готовность к покупке СЕЙЧАС):\n- Конкретно хочет купить: упоминает заказ, бюджет, сроки, цену, \"хочу заказать/купить\".\n- Знает, что хочет: описывает детали (например, \"сайт за 50к руб через 2 недели\").\n- Пример: \"Хочу заказать сайт, бюджет 50,000 руб, нужно через 2 недели\".\n\n🌡 **Тёплый клиент** (интерес есть, но думает):\n- Задаёт вопросы о возможностях, сравнивает варианты, интересуется \"подробнее\".\n- Нет конкретики по покупке, но показывает интерес к продукту/услуге.\n- Пример: \"Интересует автоматизация бизнеса, хочу узнать подробнее\".\n\n❄️ **Холодный клиент** (просто смотрит, не готов):\n- Расплывчато: \"интересуюсь\", \"что это такое\", без конкретики или намерения купить.\n- Пример: \"Просто интересуюсь что такое автоматизация\".\n\nШаги анализа:\n1. Прочитай текст заявки внимательно.\n2. Определи ключевые слова, намерение и конкретику.\n3. Выбери РОВНО ОДНУ категорию: \"горячий\", \"тёплый\" или \"холодный\".\n4. Обоснуй решение в 1-2 предложениях (кратко).\n\nТекст заявки для анализа:\n{{ $json.query.request }}\n\nВерни ТОЛЬКО чистый JSON без markdown, без пояснений, без текста вокруг.\n\nФормат:\n{\n  \"temperature\": \"горячий|тёплый|холодный\",\n  \"reason\": \"краткое объяснение решения\",\n  \"next_action\": \"рекомендованное действие\"\n}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        -480,
-        -64
-      ],
-      "id": "REDACTED_NODE_ID_1",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
         "model": "llama-3.3-70b-versatile",
         "options": {
-          "temperature": 0.7
+          "temperature": 0
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        -416,
-        128
+        -288,
+        352
       ],
-      "id": "REDACTED_NODE_ID_2",
+      "id": "63359e18-e1e7-4175-acea-e5cbe614cb87",
       "name": "Groq Chat Model",
       "credentials": {
         "groqApi": {
-          "id": "REDACTED_GROQAPI_CREDENTIAL_ID",
-          "name": "REDACTED_GROQAPI_CREDENTIAL"
+          "id": "qhLZCQMlZodwLaF8",
+          "name": "Groq account"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6e32cf37-628f-43b4-aca0-6633fa10b24b",
+              "leftValue": "={{ $json.budget }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        176
+      ],
+      "id": "29b781ec-643e-458f-b2fd-0b7f3f797332",
+      "name": "Budget exists?"
+    },
+    {
+      "parameters": {
+        "path": "REDACTED_WEBHOOK_PATH",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -848,
+        192
+      ],
+      "id": "8d6e59f2-3df6-457d-b420-182e606862ef",
+      "name": "Receive Lead Webhook",
+      "webhookId": "REDACTED_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Берём query из webhook\nconst q = $json.query;\n\n// Проверяем обязательные поля\nconst name = q.name?.trim();\nconst email = q.email?.trim();\nconst phone = q.phone?.trim();\nconst request = q.request?.trim();\nconst secret = q.secret;\n\n// Простая проверка email\nconst emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email || '');\n\n// Проверяем всё вместе\nconst isValid =\n  name &&\n  email &&\n  phone &&\n  request &&\n  emailValid &&\n  secret === 'my_super_secret';\n\n// Возвращаем результат\nreturn [\n  {\n    json: {\n      ...q,\n      is_valid: Boolean(isValid),\n      email_valid: emailValid\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        192
+      ],
+      "id": "1caa55d3-81dc-4c83-9663-a05eabeb0c76",
+      "name": "Validate Lead Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a9645cd7-7f91-4086-a97d-82b1b100ac4c",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -480,
+        192
+      ],
+      "id": "220fd053-e45f-4b85-9be5-e35536745b1e",
+      "name": "Is Lead Valid?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "options": {
+          "systemMessage": "=Ты классифицируешь входящую заявку клиента.\n\nВерни только валидный JSON без markdown и без текста вокруг.\n\nДопустимые значения temperature:\n- горячий\n- тёплый\n- холодный\n\nПравила:\n- горячий: клиент явно хочет купить/заказать, указывает бюджет, сроки, цену или конкретную задачу.\n- тёплый: клиент заинтересован, задаёт вопросы, хочет узнать подробнее, но без явной готовности купить сейчас.\n- холодный: общий интерес, нет конкретной задачи, нет намерения купить.\n\nФормат ответа:\n{\n  \"temperature\": \"горячий|тёплый|холодный\",\n  \"reason\": \"короткое объяснение\",\n  \"next_action\": \"следующее действие\"\n}\n\nЗаявка:\n{{ $json.request }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -288,
+        176
+      ],
+      "id": "35874156-e747-4419-9feb-aceb277c821f",
+      "name": "Classify Lead with AI"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\nconst lead = $('Receive Lead Webhook').first().json.query;\n\nconst cleaned = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Ищем бюджет в тексте заявки\nconst requestText = lead.request || '';\n\nlet budget = null;\n\nconst budgetPatterns = [\n  /(?:бюджет|цена|стоимость)\\D*(\\d[\\d\\s.,]*)/i,\n  /(\\d+(?:[.,]\\d+)?)\\s*(?:тыс|тыщ|тысяч|к|k)(?=$|[\\s.,!?;:])/i,\n  /(\\d+(?:[.,]\\d+)?)\\s*(?:млн|миллион|миллиона|миллионов)(?=$|[\\s.,!?;:])/i\n];\n\nfor (const pattern of budgetPatterns) {\n  const match = requestText.match(pattern);\n\n  if (!match) continue;\n\n  const value = Number(String(match[1]).replace(/\\s/g, '').replace(',', '.'));\n\n  if (!Number.isFinite(value)) continue;\n\n  if (/млн|миллион/i.test(match[0])) {\n    budget = Math.round(value * 1000000);\n  } else if (/тыс|тыщ|тысяч|к|k/i.test(match[0])) {\n    budget = Math.round(value * 1000);\n  } else {\n    budget = Math.round(value);\n  }\n\n  break;\n}\n\ntry {\n  const data = JSON.parse(cleaned);\n\n  let temperature = String(data.temperature || '').trim().toLowerCase();\n\n  if (temperature === 'теплый') {\n    temperature = 'тёплый';\n  }\n\n  const allowedTemperatures = ['горячий', 'тёплый', 'холодный'];\n\n  if (!allowedTemperatures.includes(temperature)) {\n    throw new Error(`Unknown temperature: ${data.temperature}`);\n  }\n\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        email_valid: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email || ''),\n        temperature: temperature,\n        reason: data.reason || 'AI не указал причину',\n        next_action: data.next_action || 'Проверить вручную',\n        raw_ai_output: raw\n      }\n    }\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        email_valid: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email || ''),\n        temperature: 'ошибка',\n        reason: 'AI вернул невалидный или неполный JSON',\n        next_action: 'Проверить вручную',\n        raw_ai_output: raw,\n        error: error.message\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        176
+      ],
+      "id": "0790b493-6533-4028-bf66-c1f21b716c65",
+      "name": "Parse AI Classification"
     },
     {
       "parameters": {
@@ -140,11 +233,11 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -48,
-        -96
+        160,
+        144
       ],
-      "id": "REDACTED_NODE_ID_3",
-      "name": "Switch"
+      "id": "9cebdd7b-df3a-4abf-9a86-5c86df5c0c0d",
+      "name": "Route by Lead Temperature"
     },
     {
       "parameters": {
@@ -157,16 +250,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        208,
-        -64
+        464,
+        176
       ],
-      "id": "REDACTED_NODE_ID_4",
-      "name": "Send a text message",
+      "id": "6bb934f5-8f43-443a-8eee-912baf9952c9",
+      "name": "Notify Manager: Hot Lead",
       "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
-          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
+          "id": "gvJHnZl6WR8mZHWE",
+          "name": "Telegram account"
         }
       }
     },
@@ -176,24 +269,24 @@
         "url": "REDACTED_EXTERNAL_URL",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Code in JavaScript').item.json.name }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Code in JavaScript').item.json.phone }} Email: {{ $('Code in JavaScript').item.json.email }} Заявка: {{ $('Code in JavaScript').item.json.request }} Температура: {{ $('Code in JavaScript').item.json.temperature }} Причина: {{ $('Code in JavaScript').item.json.reason }}\",\n    \"OPPORTUNITY\": {{ $('Code in JavaScript').item.json.budget }},\n    \"CURRENCY_ID\": \"RUB\"\n  }\n}",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Parse AI Classification').item.json.name }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Parse AI Classification').item.json.phone }} Email: {{ $('Parse AI Classification').item.json.email }} Заявка: {{ $('Parse AI Classification').item.json.request }} Температура: {{ $('Parse AI Classification').item.json.temperature }} Причина: {{ $('Parse AI Classification').item.json.reason }}\",\n    \"OPPORTUNITY\": {{ $('Parse AI Classification').item.json.budget }},\n    \"CURRENCY_ID\": \"RUB\"\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        464,
-        -64
+        1056,
+        80
       ],
-      "id": "REDACTED_NODE_ID_5",
-      "name": "HTTP Request1"
+      "id": "a84472fa-3e6a-42ef-a9fe-9a542cbecfaa",
+      "name": "Create CRM Deal: Hot Lead"
     },
     {
       "parameters": {
         "sendTo": "{{ $json.email }}",
         "subject": "Presentation",
         "emailType": "text",
-        "message": "smth",
+        "message": "TEXT",
         "options": {
           "appendAttribution": false
         }
@@ -201,18 +294,12 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        208,
-        144
+        496,
+        432
       ],
-      "id": "REDACTED_NODE_ID_6",
-      "name": "Send a message",
-      "webhookId": "REDACTED_WEBHOOK_ID",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "REDACTED_GMAILOAUTH2_CREDENTIAL_ID",
-          "name": "REDACTED_GMAILOAUTH2_CREDENTIAL"
-        }
-      }
+      "id": "ff16e1be-be2a-49b8-a31f-2c0a3961d152",
+      "name": "Send Warm Lead Email",
+      "webhookId": "REDACTED_WEBHOOK_ID"
     },
     {
       "parameters": {
@@ -225,16 +312,39 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        208,
-        -256
+        496,
+        -80
       ],
-      "id": "REDACTED_NODE_ID_7",
-      "name": "Send a message1",
-      "webhookId": "REDACTED_WEBHOOK_ID",
+      "id": "3e2edb46-2dd9-4c2e-82d3-69c20c3e0f1f",
+      "name": "Send Cold Lead Email",
+      "webhookId": "REDACTED_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        -80
+      ],
+      "id": "88a9c73f-bf91-4a3a-821c-2874ecc152f2",
+      "name": "Log Cold Lead",
       "credentials": {
-        "gmailOAuth2": {
-          "id": "REDACTED_GMAILOAUTH2_CREDENTIAL_ID",
-          "name": "REDACTED_GMAILOAUTH2_CREDENTIAL"
+        "googleSheetsOAuth2Api": {
+          "id": "6KphgqpWyipzou24",
+          "name": "Google Sheets account"
         }
       }
     },
@@ -255,64 +365,22 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        448,
-        -256
+        688,
+        432
       ],
-      "id": "REDACTED_NODE_ID_8",
-      "name": "Append row in sheet",
+      "id": "1fbb0aa1-ec49-4939-adad-3ba09f59b6f3",
+      "name": "Log Warm Lead",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL_ID",
-          "name": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const raw = $input.first().json.output;\nconst lead = $('Webhook').first().json.query;\n\nconst cleaned = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Ищем бюджет в тексте заявки\nconst requestText = lead.request || '';\nconst budgetMatch = requestText.match(/(?:бюджет|цена|стоимость)\\D*(\\d[\\d\\s.,]*)/i);\n\nlet budget = null;\n\nif (budgetMatch) {\n  budget = Number(\n    budgetMatch[1]\n      .replace(/\\s/g, '')\n      .replace(',', '')\n      .replace('.', '')\n  );\n}\n\ntry {\n  const data = JSON.parse(cleaned);\n\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        temperature: data.temperature,\n        reason: data.reason,\n        next_action: data.next_action,\n        raw_ai_output: raw\n      }\n    }\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        name: lead.name,\n        email: lead.email,\n        phone: lead.phone,\n        request: lead.request,\n        budget: budget,\n        temperature: \"ошибка\",\n        reason: \"AI вернул невалидный JSON\",\n        next_action: \"Проверить вручную\",\n        raw_ai_output: raw,\n        error: error.message\n      }\n    }\n  ];\n}"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -192,
-        -64
-      ],
-      "id": "REDACTED_NODE_ID_9",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        }
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        464,
-        144
-      ],
-      "id": "REDACTED_NODE_ID_10",
-      "name": "Append row in sheet1",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL_ID",
-          "name": "REDACTED_GOOGLESHEETSOAUTH2API_CREDENTIAL"
+          "id": "6KphgqpWyipzou24",
+          "name": "Google Sheets account"
         }
       }
     },
     {
       "parameters": {
         "chatId": "YOUR_TELEGRAM_CHAT_ID",
-        "text": "=AI вернул кривой JSON, надо проверить.",
+        "text": "=⚠️ Неизвестная температура лида\n\nИмя: {{ $json.name }}\n\nЗапрос:\n{{ $json.request }}\n\nAI ответ:\n{{ $json.raw_ai_output }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -320,125 +388,347 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -32,
-        192
+        176,
+        448
       ],
-      "id": "REDACTED_NODE_ID_11",
-      "name": "Send a text message1",
+      "id": "2acbd376-962b-4090-8d50-d6734a09723a",
+      "name": "Notify Admin: AI Classification Failed",
       "webhookId": "REDACTED_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "REDACTED_TELEGRAMAPI_CREDENTIAL_ID",
-          "name": "REDACTED_TELEGRAMAPI_CREDENTIAL"
+          "id": "gvJHnZl6WR8mZHWE",
+          "name": "Telegram account"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "REDACTED_EXTERNAL_URL",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Parse AI Classification').item.json.name }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Parse AI Classification').item.json.phone }} Email: {{ $('Parse AI Classification').item.json.email }} Заявка: {{ $('Parse AI Classification').item.json.request }} Температура: {{ $('Parse AI Classification').item.json.temperature }} Причина: {{ $('Parse AI Classification').item.json.reason }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1056,
+        256
+      ],
+      "id": "e735c236-d6f0-48c6-8ec9-9c6881b11c5d",
+      "name": "Create CRM Deal: Hot Lead (No Budget)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"status\": \"accepted\",\n  \"message\": \"Заявка получена\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1248,
+        80
+      ],
+      "id": "1aabb234-5404-4a99-8d7c-f7e04a36e996",
+      "name": "Response: Hot Lead Accepted"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"status\": \"accepted\",\n  \"message\": \"Заявка получена\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1248,
+        256
+      ],
+      "id": "455311d2-408e-47dd-a7fe-af1a4c74079a",
+      "name": "Response: Hot Lead Missing Budget"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"status\": \"accepted\",\n  \"message\": \"Заявка получена\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        432
+      ],
+      "id": "d71da843-86a7-4891-a0ff-2b8c2972611a",
+      "name": "Response: Warm Lead"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"status\": \"accepted\",\n  \"message\": \"Заявка получена\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        848,
+        -80
+      ],
+      "id": "3c435ff1-ff91-4ec9-ba14-fe54c2930e39",
+      "name": "Response: Cold Lead"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Classification failed\",\n  \"message\": \"Заявка получена и отправлена на ручную проверку\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        672
+      ],
+      "id": "74588719-302b-4ed4-9ced-243b126896fc",
+      "name": "Response: AI Failure"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Invalid input\",\n  \"message\": \"Проверьте имя, телефон, email и текст заявки\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -480,
+        368
+      ],
+      "id": "88a85344-86b2-4822-9107-453ce5e800af",
+      "name": "Response: Validation Error"
     }
   ],
   "pinData": {},
   "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Groq Chat Model": {
       "ai_languageModel": [
         [
           {
-            "node": "AI Agent",
+            "node": "Classify Lead with AI",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "AI Agent": {
+    "Budget exists?": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch": {
-      "main": [
-        [
-          {
-            "node": "Send a message1",
+            "node": "Create CRM Deal: Hot Lead",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send a text message",
+            "node": "Create CRM Deal: Hot Lead (No Budget)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Input": {
+      "main": [
+        [
+          {
+            "node": "Is Lead Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lead Valid?": {
+      "main": [
+        [
+          {
+            "node": "Classify Lead with AI",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send a message",
+            "node": "Response: Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Lead with AI": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Classification": {
+      "main": [
+        [
+          {
+            "node": "Route by Lead Temperature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Lead Temperature": {
+      "main": [
+        [
+          {
+            "node": "Send Cold Lead Email",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send a text message1",
+            "node": "Notify Manager: Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warm Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Admin: AI Classification Failed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send a text message": {
+    "Notify Manager: Hot Lead": {
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Budget exists?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send a message1": {
+    "Send Warm Lead Email": {
       "main": [
         [
           {
-            "node": "Append row in sheet",
+            "node": "Log Warm Lead",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code in JavaScript": {
+    "Send Cold Lead Email": {
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "Log Cold Lead",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send a message": {
+    "Create CRM Deal: Hot Lead": {
       "main": [
         [
           {
-            "node": "Append row in sheet1",
+            "node": "Response: Hot Lead Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Warm Lead": {
+      "main": [
+        [
+          {
+            "node": "Response: Warm Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Cold Lead": {
+      "main": [
+        [
+          {
+            "node": "Response: Cold Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Admin: AI Classification Failed": {
+      "main": [
+        [
+          {
+            "node": "Response: AI Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create CRM Deal: Hot Lead (No Budget)": {
+      "main": [
+        [
+          {
+            "node": "Response: Hot Lead Missing Budget",
             "type": "main",
             "index": 0
           }
@@ -449,14 +739,12 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "REDACTED_VERSION_ID",
+  "versionId": "d91db8c2-50c8-46c9-8bdb-f91795d56a9f",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "REDACTED_N8N_INSTANCE_ID"
+    "instanceId": "865b19f2574d32bf9df4605ba40d745b209ccb57d934dde9e0673fd6027aefd1"
   },
-  "id": "REDACTED_WORKFLOW_ID",
+  "id": "KLdHFb9lwZQsPMdC",
   "tags": []
 }
