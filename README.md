@@ -23,6 +23,7 @@ n8n-portfolio/
 ├── 03-hh-parser/
 ├── 04-rag-telegram-faq-bot/
 ├── 05-competitor-price-&-offer-monitoring-system/
+├── 06-fitness-club-lead-capture/
 ├── other-projects/
 └── README.md
 ```
@@ -34,10 +35,11 @@ n8n-portfolio/
 | # | Проект | Что делает | Стек |
 |---|--------|------------|------|
 | 1 | [AI-ассистент продаж](./01-ai-sales-assistant/) | Ведёт клиента в Telegram, собирает данные и помогает оформить заказ | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [ИИ-воронка квалификации лидов](./02-lead-funnel/) | Валидирует заявки, классифицирует лидов через ИИ, извлекает бюджет и маршрутизирует обработку | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Google Sheets` · `Bitrix24` |
+| 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Делит заявки на холодные / тёплые / горячие и запускает разные сценарии | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Умный парсер вакансий](./03-hh-parser/) | Получает вакансии через API, фильтрует и оценивает их через LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Отвечает на вопросы в Telegram по базе знаний из PDF через Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 | 5 | [Мониторинг цен конкурентов](./05-competitor-price-&-offer-monitoring-system/) | Собирает цены с сайтов конкурентов, сравнивает с историей и отправляет Telegram-отчёты | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
+| 6 | [Воронка пробных тренировок](./06-fitness-club-lead-capture/) | Обрабатывает заявки на пробную тренировку: валидация, Sheets, Telegram и email-подтверждение | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
 
 ---
 
@@ -67,39 +69,33 @@ Telegram Trigger
 
 ---
 
-## 2. ИИ-воронка квалификации лидов
+## 2. Воронка лидов с LLM-классификатором
 
 **Папка:** [`02-lead-funnel`](./02-lead-funnel/)
 
-Production-oriented workflow для автоматической обработки входящих заявок. Система принимает лид через Webhook, валидирует поля, проверяет demo secret, классифицирует заявку через ИИ, извлекает бюджет из естественного текста и маршрутизирует обработку по температуре лида.
+Workflow для автоматической обработки входящих заявок. Система принимает заявку через Webhook, анализирует её с помощью AI Agent и распределяет лид по температуре.
 
 ### Ключевая логика
 
 ```text
 Webhook
-→ Validate Lead Input
-→ AI Classification
-→ Parse & Normalize AI Output
-→ Route by Temperature
-├── холодный лид → email → Google Sheets → Response 200
-├── тёплый лид → email → Google Sheets → Response 200
-├── горячий лид → Telegram → Budget check → Bitrix24 CRM → Response 200
-├── AI fallback → admin Telegram alert → Response 500
-└── invalid input → Response 400
+→ AI Agent
+→ Code node
+→ Switch
+├── холодный лид → email + Google Sheets
+├── тёплый лид → email + Google Sheets
+├── горячий лид → Telegram manager ping + Bitrix24 CRM
+└── fallback → Telegram error notification
 ```
 
 ### Что показывает проект
 
-- валидацию входящих данных до запуска ИИ;
-- deterministic AI classification с `temperature: 0`;
-- строгий parsing и проверку JSON-ответа модели;
-- нормализацию ИИ-ответа (`теплый` → `тёплый`);
-- извлечение бюджета из текста: `50к`, `50 тыс`, `1.5 млн`;
-- маршрутизацию лидов через Switch;
-- отдельные CRM-сценарии для заявок с бюджетом и без бюджета;
+- AI-классификацию заявок;
+- нормализацию JSON-ответа модели через Code node;
+- извлечение бюджета из текста заявки;
+- маршрутизацию через Switch;
 - интеграцию с Bitrix24 через REST API;
-- fallback-ветку на случай некорректного ИИ-ответа;
-- явные Webhook responses для успешных, невалидных и fallback-сценариев.
+- fallback-ветку на случай некорректного AI-ответа.
 
 ---
 
@@ -193,6 +189,36 @@ Schedule Trigger
 
 ---
 
+## 6. Воронка пробных тренировок для фитнес-клуба
+
+**Папка:** [`06-fitness-club-lead-capture`](./06-fitness-club-lead-capture/)
+
+Связка из основного workflow и validation sub-workflow для обработки заявок на пробную тренировку. Система принимает заявку через Webhook, проверяет секрет, валидирует обязательные поля, классифицирует лида по цели, записывает результат в Google Sheets, уведомляет менеджера в Telegram и отправляет email клиенту при наличии валидного адреса.
+
+### Ключевая логика
+
+```text
+Webhook
+→ Code node
+→ Secret check
+→ Validation sub-workflow
+→ Google Sheets
+→ Telegram manager notification
+→ IF email valid
+├── Gmail confirmation
+└── success response
+```
+
+### Что показывает проект
+
+- связку main workflow + sub-workflow;
+- server-side validation before lead processing;
+- обработку заявок с email и без email без дублирующих веток;
+- логирование ошибок в отдельный лист Google Sheets;
+- простую deterministic-классификацию лида через Code node.
+
+---
+
 ## Остальные проекты
 
 В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
@@ -220,7 +246,7 @@ Schedule Trigger
 ## Как запустить workflow
 
 1. Открой нужную папку проекта.
-2. Скачай файл `workflow.json`.
+2. Скачай JSON-файл или файлы workflow.
 3. В n8n выбери **Workflows → Import from File**.
 4. Подключи свои credentials:
    - Groq API;
@@ -273,6 +299,7 @@ n8n-portfolio/
 ├── 03-hh-parser/
 ├── 04-rag-telegram-faq-bot/
 ├── 05-competitor-price-&-offer-monitoring-system/
+├── 06-fitness-club-lead-capture/
 ├── other-projects/
 └── README.md
 ```
@@ -284,10 +311,11 @@ n8n-portfolio/
 | # | Project | What it does | Stack |
 |---|---------|--------------|-------|
 | 1 | [AI Sales Assistant](./01-ai-sales-assistant/) | Talks to customers in Telegram, collects details, and helps confirm orders | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [AI Lead Qualification Funnel](./02-lead-funnel/) | Validates leads, classifies them with AI, extracts budget, and routes each scenario | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Google Sheets` · `Bitrix24` |
+| 2 | [Lead Funnel With LLM Classifier](./02-lead-funnel/) | Classifies leads as cold / warm / hot and routes them to different actions | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
 | 3 | [Smart Vacancy Parser](./03-hh-parser/) | Gets vacancies through API, filters them, and scores them with an LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Answers Telegram questions from a PDF knowledge base using Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 | 5 | [Competitor Price Monitoring](./05-competitor-price-&-offer-monitoring-system/) | Collects competitor prices, compares them with history, and sends Telegram reports | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
+| 6 | [Fitness Club Trial Workout Funnel](./06-fitness-club-lead-capture/) | Processes trial workout requests with validation, Sheets logging, Telegram alerts, and email confirmation | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
 
 ---
 
@@ -317,39 +345,33 @@ Telegram Trigger
 
 ---
 
-## 2. AI Lead Qualification Funnel
+## 2. Lead Funnel With LLM Classifier
 
 **Folder:** [`02-lead-funnel`](./02-lead-funnel/)
 
-A production-oriented workflow for automatic incoming lead processing. The system receives a lead through Webhook, validates the input, checks a demo secret, classifies the request with an AI Agent, extracts budget from natural language, and routes the lead by temperature.
+A workflow for automatic incoming lead processing. The system receives a lead through Webhook, analyzes it with an AI Agent, and routes it based on lead temperature.
 
 ### Core Logic
 
 ```text
 Webhook
-→ Validate Lead Input
-→ AI Classification
-→ Parse & Normalize AI Output
-→ Route by Temperature
-├── cold lead → email → Google Sheets → Response 200
-├── warm lead → email → Google Sheets → Response 200
-├── hot lead → Telegram → Budget check → Bitrix24 CRM → Response 200
-├── AI fallback → admin Telegram alert → Response 500
-└── invalid input → Response 400
+→ AI Agent
+→ Code node
+→ Switch
+├── cold lead → email + Google Sheets
+├── warm lead → email + Google Sheets
+├── hot lead → Telegram manager ping + Bitrix24 CRM
+└── fallback → Telegram error notification
 ```
 
 ### What this project demonstrates
 
-- input validation before AI execution;
-- deterministic AI classification with `temperature: 0`;
-- strict parsing and validation of AI JSON output;
-- AI output normalization (`теплый` → `тёплый`);
-- budget extraction from natural language: `50к`, `50 тыс`, `1.5 млн`;
-- lead routing with Switch;
-- separate CRM paths for leads with and without budget;
+- AI-based lead classification;
+- JSON normalization through a Code node;
+- budget extraction from request text;
+- routing with Switch;
 - Bitrix24 REST API integration;
-- fallback handling for invalid AI output;
-- explicit Webhook responses for success, invalid input, and fallback scenarios.
+- fallback handling for invalid AI output.
 
 ---
 
@@ -443,6 +465,36 @@ Schedule Trigger
 
 ---
 
+## 6. Fitness Club Trial Workout Funnel
+
+**Folder:** [`06-fitness-club-lead-capture`](./06-fitness-club-lead-capture/)
+
+A pair of n8n workflows for processing trial workout requests for a fitness club. The main workflow receives leads through a Webhook, checks a request secret, calls a validation sub-workflow, classifies leads by goal, saves valid requests to Google Sheets, notifies a manager in Telegram, and sends a Gmail confirmation when a valid email is provided.
+
+### Core Logic
+
+```text
+Webhook
+→ Code node
+→ Secret check
+→ Validation sub-workflow
+→ Google Sheets
+→ Telegram manager notification
+→ IF email valid
+├── Gmail confirmation
+└── success response
+```
+
+### What this project demonstrates
+
+- main workflow + sub-workflow architecture;
+- server-side validation before lead processing;
+- lead handling with and without email without duplicated branches;
+- separate Google Sheets error logging;
+- deterministic lead classification through a Code node.
+
+---
+
 ## Other Projects
 
 The [`other-projects`](./other-projects/) folder contains less formalized but working workflows:
@@ -470,7 +522,7 @@ The [`other-projects`](./other-projects/) folder contains less formalized but wo
 ## How to Run a Workflow
 
 1. Open the project folder.
-2. Download `workflow.json`.
+2. Download the workflow JSON file or files.
 3. In n8n, go to **Workflows → Import from File**.
 4. Connect your own credentials:
    - Groq API;

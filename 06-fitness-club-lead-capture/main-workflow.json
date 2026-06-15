@@ -1,0 +1,710 @@
+{
+  "name": "Fitness Club Trial Workout Funnel - Main",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "fitness-club-lead-capture",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        16
+      ],
+      "id": "0a03432d-5792-4d22-8e0d-52c8a97684ba",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd1585d1-7ddc-4da4-8253-9a5574037b67",
+              "name": "name",
+              "value": "={{ $json.query.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2eb84712-8304-4a7e-8291-a967b06952d1",
+              "name": "phone",
+              "value": "={{ $json.query.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "e043ac07-b7aa-406b-b486-965c1c92d5e9",
+              "name": "email",
+              "value": "={{ $json.query.email }}",
+              "type": "string"
+            },
+            {
+              "id": "774028d8-21e9-47fd-8d09-278275365603",
+              "name": "club",
+              "value": "={{ $json.query.club }}",
+              "type": "string"
+            },
+            {
+              "id": "022a6153-e26f-44bf-a552-69263a2b1496",
+              "name": "goal",
+              "value": "={{ $json.query.goal }}",
+              "type": "string"
+            },
+            {
+              "id": "942a6b28-7da3-4e6c-acc9-66709d90c39c",
+              "name": "secret",
+              "value": "={{ $json.query.secret }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        16
+      ],
+      "id": "9cec99da-a7bb-4d45-927b-f6c82068a1c6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "68399335-50a3-439e-9348-6296a0484563",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "0c78a5e8-b228-4cc3-85c1-9f1e29b94e0b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9ce15334-21aa-4476-91eb-db193415e106",
+              "leftValue": "={{ $json.secret }}",
+              "rightValue": "YOUR_WEBHOOK_SECRET",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        16
+      ],
+      "id": "3b54b416-a3b8-42d6-8b3a-5b163bfb897d",
+      "name": "проверка секрета"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\n  \"success\": false,\n\n  \"error\": \"wrong secret\"\n\n}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        784,
+        240
+      ],
+      "id": "fc13af04-dc32-45a1-ab1f-78c766691a6d",
+      "name": "ошибка"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_SUB_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Fitness Club Trial Workout Funnel - Validation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "a21ad07f-59cf-4820-a9ef-884ca7a53a88",
+      "name": "проверка валидации"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"application received\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2288,
+        -256
+      ],
+      "id": "2fc7836e-6f18-4bda-8cf1-f68a6a650c0c",
+      "name": "Успех"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"error\",\n  \"message\": \"missing required fields\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1456,
+        80
+      ],
+      "id": "defd1402-6d1c-4ef0-958c-1c1edcebff18",
+      "name": "Ошибка полей"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"application received\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2064,
+        -48
+      ],
+      "id": "2e35bb90-5dbe-4b86-b5bc-8fbaa2a99d57",
+      "name": "Успех1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = ($json.email || '').trim();\nconst goal = ($json.goal || '').trim().toLowerCase();\n\nconst emailIsEmpty = email === '';\nconst emailIsValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\n\nlet leadType = 'cold';\n\nif (goal === 'похудение') {\n  leadType = 'hot';\n} else if (goal === 'набор мышечной массы') {\n  leadType = 'warm';\n}\n\nreturn [{\n  json: {\n    ...$json,\n    email_is_empty: emailIsEmpty,\n    email_is_valid: !emailIsEmpty && emailIsValid,\n    lead_type: leadType,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        16
+      ],
+      "id": "cfe3c485-3d3f-4b9f-a6d7-ef188e79c3bd",
+      "name": "Проверка email и класс.лида"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Fitness club leads"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Errors",
+          "mode": "list",
+          "cachedResultName": "Errors"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "Имя": "={{ $json.name }}",
+            "Телефон": "={{ $json.phone }}",
+            "Клуб": "={{ $json.club }}",
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "Причина ошибки": "={{ $json.error_reason }}"
+          },
+          "matchingColumns": [
+            "Дата"
+          ],
+          "schema": [
+            {
+              "id": "Дата",
+              "displayName": "Дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Телефон",
+              "displayName": "Телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Клуб",
+              "displayName": "Клуб",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Причина ошибки",
+              "displayName": "Причина ошибки",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        80
+      ],
+      "id": "8e362319-db69-4e6c-88bf-06858b1e404e",
+      "name": "запись ошибок",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01c1461d-eca3-42bb-9be3-c7537737cfcf",
+              "leftValue": "={{ $('Проверка email и класс.лида').item.json.email_is_empty }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "08e43928-d0a9-4863-834a-111fe412dfd3",
+              "leftValue": "={{ $('Проверка email и класс.лида').item.json.email_is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        -144
+      ],
+      "id": "bd2cbef0-bcb1-4e05-82a0-6e6018a231f8",
+      "name": "проверка email"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Новая заявка🚀  \nИмя: {{ $('Edit Fields').item.json.name }}\nТелефон: {{ $('Edit Fields').item.json.phone }}  \nКлуб: {{ $('Edit Fields').item.json.club }}  \nЦель: {{ $('Edit Fields').item.json.goal }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        -144
+      ],
+      "id": "1246e332-e3ad-418f-8582-7413a10be6ba",
+      "name": "уведомление менеджеру",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').item.json.email }}",
+        "subject": "Фитнес клуб",
+        "message": "=Здравствуйте!  Спасибо за запись на пробную тренировку.  Клуб: {{ $('Edit Fields').item.json.club }}  \nМы свяжемся с вами в ближайшее время.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        -256
+      ],
+      "id": "3edc025e-7a97-41b1-96eb-654288256c4d",
+      "name": "письмо лиду",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Fitness club leads"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Имя": "={{ $('Edit Fields').item.json.name }}",
+            "Телефон": "={{ $('Edit Fields').item.json.phone }}",
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "Клуб": "={{ $('Edit Fields').item.json.club }}",
+            "Цель": "={{ $('Edit Fields').item.json.goal }}",
+            "Дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "lead_type": "={{ $('Проверка email и класс.лида').item.json.lead_type }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Дата",
+              "displayName": "Дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Имя",
+              "displayName": "Имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Телефон",
+              "displayName": "Телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Клуб",
+              "displayName": "Клуб",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Цель",
+              "displayName": "Цель",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_type",
+              "displayName": "lead_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        -144
+      ],
+      "id": "bbd61bb0-19c9-497c-b58b-c7f4a70156ea",
+      "name": "запись лида",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Проверка email и класс.лида",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "запись лида",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка полей",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка секрета": {
+      "main": [
+        [
+          {
+            "node": "проверка валидации",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка валидации": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Успех": {
+      "main": [
+        []
+      ]
+    },
+    "Ошибка полей": {
+      "main": [
+        [
+          {
+            "node": "запись ошибок",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка email и класс.лида": {
+      "main": [
+        [
+          {
+            "node": "проверка секрета",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка email": {
+      "main": [
+        [
+          {
+            "node": "письмо лиду",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Успех1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "уведомление менеджеру": {
+      "main": [
+        [
+          {
+            "node": "проверка email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "письмо лиду": {
+      "main": [
+        [
+          {
+            "node": "Успех",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "запись лида": {
+      "main": [
+        [
+          {
+            "node": "уведомление менеджеру",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}
