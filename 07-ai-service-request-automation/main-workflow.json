@@ -1,0 +1,1233 @@
+{
+  "name": "AI Service Request Automation - Main",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ai-service-request-automation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        16
+      ],
+      "id": "b3fcff22-c28a-4a4d-984e-30eee20616c4",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd1585d1-7ddc-4da4-8253-9a5574037b67",
+              "name": "name",
+              "value": "={{ $json.query.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2eb84712-8304-4a7e-8291-a967b06952d1",
+              "name": "phone",
+              "value": "={{ $json.query.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "e043ac07-b7aa-406b-b486-965c1c92d5e9",
+              "name": "email",
+              "value": "={{ $json.query.email }}",
+              "type": "string"
+            },
+            {
+              "id": "774028d8-21e9-47fd-8d09-278275365603",
+              "name": "request",
+              "value": "={{ $json.query.request }}",
+              "type": "string"
+            },
+            {
+              "id": "942a6b28-7da3-4e6c-acc9-66709d90c39c",
+              "name": "secret",
+              "value": "={{ $json.query.secret }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        16
+      ],
+      "id": "c4d8cad9-c16d-467e-b491-bd760206b944",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "68399335-50a3-439e-9348-6296a0484563",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "040c695f-bb0a-4e96-a363-49d118a8e03b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9ce15334-21aa-4476-91eb-db193415e106",
+              "leftValue": "={{ $json.secret }}",
+              "rightValue": "YOUR_WEBHOOK_SECRET",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        16
+      ],
+      "id": "aed24b34-fa65-47f4-87fb-03bff1ab506b",
+      "name": "проверка секрета"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\n  \"success\": false,\n\n  \"error\": \"wrong secret\"\n\n}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        208
+      ],
+      "id": "070ea617-c7a7-4755-ad24-405371315040",
+      "name": "ошибка"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_VALIDATION_SUB_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "AI Service Request Automation - Validation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "92636d08-f500-48f0-90e1-e64021d420cf",
+      "name": "проверка валидации"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2336,
+        -384
+      ],
+      "id": "23325d5c-294b-4d5e-9b68-7d556a610484",
+      "name": "Успех"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    success: false,\n    error: \"validation_failed\",\n    reason: $json.error_reason\n  }\n}}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1008,
+        80
+      ],
+      "id": "4981d4a3-f1b5-4448-bd24-098e4ea3c89c",
+      "name": "Ошибка полей"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Service request automation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Errors",
+          "mode": "list",
+          "cachedResultName": "Errors"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "имя": "={{ $('Edit Fields').item.json.name }}",
+            "телефон": "={{ $('Edit Fields').item.json.phone }}",
+            "причина ошибки": "={{ $json.error_reason }}"
+          },
+          "matchingColumns": [
+            "Дата"
+          ],
+          "schema": [
+            {
+              "id": "дата",
+              "displayName": "дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "имя",
+              "displayName": "имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "телефон",
+              "displayName": "телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "причина ошибки",
+              "displayName": "причина ошибки",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1200,
+        80
+      ],
+      "id": "79d6ce01-0e0d-4887-ae79-d24b6b2f4105",
+      "name": "запись ошибок",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01c1461d-eca3-42bb-9be3-c7537737cfcf",
+              "leftValue": "={{ ($('Edit Fields').item.json.email || \"\").replace(/\\s+/g, \"\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "97e603d4-4fc2-4be2-860b-eb25749cc70b",
+              "leftValue": "={{ /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(($('Edit Fields').item.json.email || \"\").replace(/\\s+/g, \"\")) }}",
+              "rightValue": "={{ /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test($('Edit Fields').item.json.email?.trim() || \"\") }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        -352
+      ],
+      "id": "f8701cde-b70d-4eb7-b611-51ff0d2266b6",
+      "name": "проверка email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ ($('Edit Fields').item.json.email || \"\").replace(/\\s+/g, \"\") }}",
+        "subject": "Сервисный центр",
+        "message": "=Здравствуйте!  Спасибо за обращение! Мы получили Вашу заявку, свяжемся с вами в ближайшее время.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        -496
+      ],
+      "id": "f5ffed20-029f-4444-b93a-69498b2e464f",
+      "name": "письмо лиду",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "options": {
+          "systemMessage": "=Ты классифицируешь срочность заявок в сервис по ремонту бытовой техники.\n\nНа вход приходит текст заявки от клиента. Определи срочность обращения только по смыслу заявки.\n\nВажно: не используй Markdown, не оборачивай ответ в ```json. Верни только чистый JSON-объект.\n\nКатегории срочности:\n\n🔴 срочно\nИспользуй, если:\n- есть риск затопления, протечки, короткого замыкания, запаха гари, дыма;\n- техника критически нужна прямо сейчас;\n- холодильник/морозилка не работает и продукты портятся;\n- стиральная/посудомоечная машина течет;\n- клиент явно пишет: \"срочно\", \"очень нужно\", \"прямо сейчас\", \"авария\", \"горит\", \"течет\", \"затопили\".\n\n🟡 сегодня\nИспользуй, если:\n- техника не работает, но нет явной аварии;\n- клиент просит мастера сегодня;\n- поломка мешает пользоваться техникой, но нет угрозы ущерба;\n- примеры: не включается стиральная машина, не греет духовка, не запускается посудомойка, холодильник плохо холодит, но без слов о порче продуктов.\n\n🟢 можно позже\nИспользуй, если:\n- проблема некритичная;\n- техника частично работает;\n- клиент интересуется ценой, диагностикой, консультацией;\n- нужна замена детали, профилактика, шум, ошибка, но без срочности;\n- клиент сам пишет, что можно не сегодня.\n\nЕсли информации мало, выбери наиболее осторожную подходящую категорию:\n- если есть признаки риска ущерба — 🔴 срочно;\n- если техника полностью не работает — 🟡 сегодня;\n- если это вопрос/консультация/некритичная проблема — 🟢 можно позже.\n\nВерни ответ строго в JSON без Markdown:\n\n{\n  \"urgency\": \"🔴 срочно\" | \"🟡 сегодня\" | \"🟢 можно позже\",\n  \"reason\": \"короткое объяснение, почему выбрана эта срочность\",\n  \"confidence\": число от 0 до 1\n}\n\nТекст заявки:\n{{ $json.request }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1008,
+        -304
+      ],
+      "id": "cb89fd30-113c-4353-9898-25f4aed6e86f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        -96
+      ],
+      "id": "a67c8a37-133c-4a3f-a6ef-a44c39fe35ac",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.urgency }}",
+                    "rightValue": "🟡 сегодня",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "75d4cdc2-7dea-46a1-9bbf-c61054d967ff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Сегодня"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "55dc652c-aba7-4bcf-ba5f-53cb2024cdcc",
+                    "leftValue": "={{ $json.urgency }}",
+                    "rightValue": "🔴 срочно",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Срочно"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a4914bc0-b15e-4090-9ffb-b9b14e6ae74e",
+                    "leftValue": "={{ $json.urgency }}",
+                    "rightValue": "🟢 можно позже",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Позже"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        -96
+      ],
+      "id": "8bc7d950-5b48-4f8d-966c-8b70f9705e35",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Поступила срочная заявка на ремонт! \nКлиент: {{ $('Edit Fields').item.json.name }}, {{ $('Edit Fields').item.json.phone }}, {{ $('Edit Fields').item.json.email }}, {{ $('Edit Fields').item.json.request }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2048,
+        -112
+      ],
+      "id": "1a7be229-8d2c-4497-be5e-710d45605d54",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\n  \n  \"error\": \"запись не создана\"\n\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2048,
+        48
+      ],
+      "id": "a6d5cb06-d92a-4906-aa51-4a8449237af3",
+      "name": "ошибка2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\n  \n  \"error\": \"запись не создана\"\n\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2032,
+        240
+      ],
+      "id": "7f29b783-c3fd-478d-8654-44dbf0adaf65",
+      "name": "ошибка3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9dff28b7-7a1a-4496-a09c-54e60c2fae8b",
+              "leftValue": "={{ $json.ai_error }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        -304
+      ],
+      "id": "da52ce46-85ac-4ab1-b565-92ba3818273c",
+      "name": "проверка ответов ИИ"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\n  \n  \"error\": \"неверный ответ ИИ\"\n\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1840,
+        -464
+      ],
+      "id": "bebe06eb-f273-4c8a-b678-c124d62012b0",
+      "name": "Error parse AI"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "Не удалось записать заявку",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1696,
+        -464
+      ],
+      "id": "df58317a-ac89-4258-b817-7c050659db87",
+      "name": "Error to mngr"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output || $json.text || $json.response || $json.message || '';\n\nlet cleaned = raw;\n\nif (typeof cleaned === 'string') {\n  cleaned = cleaned\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/```$/i, '')\n    .trim();\n}\n\nlet parsed;\n\ntry {\n  parsed = typeof cleaned === 'string' ? JSON.parse(cleaned) : cleaned;\n} catch (e) {\n  parsed = {\n    ai_error: true,\n    error_reason: \"AI JSON parse failed\"\n  };\n}\n\nreturn [\n  {\n    json: {\n      ai_error: parsed.ai_error || false,\n      error_reason: parsed.error_reason || \"\",\n      urgency: parsed.urgency || \"\",\n      urgency_reason: parsed.reason || \"\",\n      urgency_confidence: parsed.confidence || 0\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        -304
+      ],
+      "id": "57b245bf-94c2-4305-bf56-6eeb5a3e3235",
+      "name": "Parse AI answer"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Service request automation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Requests",
+          "mode": "list",
+          "cachedResultName": "Requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "имя": "={{ $('Edit Fields').item.json.name }}",
+            "телефон": "={{ $('Edit Fields').item.json.phone }}",
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "проблема": "={{ $('Edit Fields').item.json.request }}",
+            "срочность": "={{ $('проверка ответов ИИ').item.json.urgency }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "дата",
+              "displayName": "дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "имя",
+              "displayName": "имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "телефон",
+              "displayName": "телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "проблема",
+              "displayName": "проблема",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "срочность",
+              "displayName": "срочность",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1776,
+        -256
+      ],
+      "id": "4fa62ccc-3cd1-47ea-9984-31fe1202c000",
+      "name": "Запись \"Сегодня\"",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Service request automation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Requests",
+          "mode": "list",
+          "cachedResultName": "Requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "срочность": "={{ $json.urgency }}",
+            "дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "имя": "={{ $('Edit Fields').item.json.name }}",
+            "телефон": "={{ $('Edit Fields').item.json.phone }}",
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "проблема": "={{ $('Edit Fields').item.json.request }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "дата",
+              "displayName": "дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "имя",
+              "displayName": "имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "телефон",
+              "displayName": "телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "проблема",
+              "displayName": "проблема",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "срочность",
+              "displayName": "срочность",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1776,
+        -96
+      ],
+      "id": "103c4e66-ef07-43b5-9cb3-237ee13b16f1",
+      "name": "Запись \"Срочно\"",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Service request automation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Requests",
+          "mode": "list",
+          "cachedResultName": "Requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "имя": "={{ $('Edit Fields').item.json.name }}",
+            "телефон": "={{ $('Edit Fields').item.json.phone }}",
+            "email": "={{ $('Edit Fields').item.json.email }}",
+            "проблема": "={{ $('Edit Fields').item.json.request }}",
+            "срочность": "={{ $('проверка ответов ИИ').item.json.urgency }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "дата",
+              "displayName": "дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "имя",
+              "displayName": "имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "телефон",
+              "displayName": "телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "проблема",
+              "displayName": "проблема",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "срочность",
+              "displayName": "срочность",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1776,
+        144
+      ],
+      "id": "79499572-a14b-477a-9e22-6f0e206da61f",
+      "name": "Запись \"Позже\"",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2272,
+        -112
+      ],
+      "id": "f8ce3be4-1d32-42ce-8f42-7ef77178b711",
+      "name": "Успех1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2272,
+        128
+      ],
+      "id": "ba1ad58c-3e36-41af-b3ee-51fa3e889ed5",
+      "name": "Успех2"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "проверка секрета",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка полей",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка секрета": {
+      "main": [
+        [
+          {
+            "node": "проверка валидации",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка валидации": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Успех": {
+      "main": [
+        []
+      ]
+    },
+    "Ошибка полей": {
+      "main": [
+        [
+          {
+            "node": "запись ошибок",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка email": {
+      "main": [
+        [
+          {
+            "node": "письмо лиду",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Успех",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "письмо лиду": {
+      "main": [
+        [
+          {
+            "node": "Успех",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Запись \"Сегодня\"",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Запись \"Срочно\"",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Запись \"Позже\"",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка ответов ИИ": {
+      "main": [
+        [
+          {
+            "node": "Error to mngr",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error to mngr": {
+      "main": [
+        [
+          {
+            "node": "Error parse AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI answer": {
+      "main": [
+        [
+          {
+            "node": "проверка ответов ИИ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запись \"Сегодня\"": {
+      "main": [
+        [
+          {
+            "node": "проверка email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запись \"Срочно\"": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ошибка2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запись \"Позже\"": {
+      "main": [
+        [
+          {
+            "node": "Успех2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ошибка3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Успех1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

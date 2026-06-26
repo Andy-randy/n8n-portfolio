@@ -1,0 +1,91 @@
+{
+  "name": "AI Service Request Automation - Validation",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        -48
+      ],
+      "id": "7d5e339b-0fc4-42ce-8978-9d2e686cd06a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4de2da5a-630e-432e-9513-014031f342fb",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "cac2528c-55dc-46ce-a4c6-058f37ed8c85",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "c157085e-06ed-442b-8721-a0d2b70ae031",
+              "name": "request",
+              "value": "={{ $json.request }}",
+              "type": "string"
+            },
+            {
+              "id": "2aa0b696-4483-417d-b7ab-3dce843fb672",
+              "name": "valid",
+              "value": "={{\n  !!$json.request?.trim() && !!$json.name?.trim() && /^[\\d\\s()+-]{7,20}$/.test($json.phone?.trim() || \"\")\n}}",
+              "type": "boolean"
+            },
+            {
+              "id": "5560e881-9741-41a8-aa57-4d279aae4aaa",
+              "name": "error_reason",
+              "value": "={{\n  !$json.name?.trim()\n    ? \"missing name\"\n    : !$json.phone?.trim()\n      ? \"missing phone\"\n      : !/^[\\d\\s()+-]{7,20}$/.test($json.phone?.trim() || \"\")\n        ? \"invalid phone\"\n        : !$json.request?.trim()\n          ? \"missing request\"\n          : \"\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -48
+      ],
+      "id": "a1b92657-a22a-4322-9942-0f38be301934",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

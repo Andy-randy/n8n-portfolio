@@ -24,6 +24,7 @@ n8n-portfolio/
 ├── 04-rag-telegram-faq-bot/
 ├── 05-competitor-price-&-offer-monitoring-system/
 ├── 06-fitness-club-lead-capture/
+├── 07-ai-service-request-automation/
 ├── other-projects/
 └── README.md
 ```
@@ -40,6 +41,7 @@ n8n-portfolio/
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Отвечает на вопросы в Telegram по базе знаний из PDF через Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 | 5 | [Мониторинг цен конкурентов](./05-competitor-price-&-offer-monitoring-system/) | Собирает цены с сайтов конкурентов, сравнивает с историей и отправляет Telegram-отчёты | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 | 6 | [Воронка пробных тренировок](./06-fitness-club-lead-capture/) | Обрабатывает заявки на пробную тренировку: валидация, Sheets, Telegram и email-подтверждение | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
+| 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Принимает заявки в сервисный центр, валидирует поля и классифицирует срочность через AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
 
 ---
 
@@ -219,6 +221,37 @@ Webhook
 
 ---
 
+## 7. AI Service Request Automation
+
+**Папка:** [`07-ai-service-request-automation`](./07-ai-service-request-automation/)
+
+Связка из основного workflow и validation sub-workflow для обработки заявок в сервисный центр по ремонту бытовой техники. Система принимает заявку через Webhook, проверяет секрет, валидирует обязательные поля, классифицирует срочность обращения через AI Agent, записывает заявку в Google Sheets, уведомляет менеджера в Telegram о срочных обращениях и отправляет email-подтверждение клиенту.
+
+### Ключевая логика
+
+```text
+Webhook
+→ Secret check
+→ Validation sub-workflow
+→ AI Agent urgency classification
+→ Parse AI answer
+→ Switch
+├── urgent → Google Sheets → Telegram manager notification → success response
+├── today → Google Sheets → email check → Gmail / success response
+└── later → Google Sheets → success response
+```
+
+### Что показывает проект
+
+- AI-классификацию срочности сервисных заявок;
+- связку main workflow + sub-workflow;
+- обработку некорректного JSON-ответа модели;
+- маршрутизацию по срочности через Switch;
+- логирование валидных заявок и ошибок в Google Sheets;
+- разные сценарии коммуникации для клиента и менеджера.
+
+---
+
 ## Остальные проекты
 
 В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
@@ -239,7 +272,7 @@ Webhook
 **AI / LLM:** `Groq` · AI Agent · Simple Memory · RAG · Hugging Face Embeddings · structured JSON output · prompt engineering  
 **Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API` · `Supabase` · `pgvector`  
 **Code:** `JavaScript` Code node · JSON parsing · data normalization  
-**Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
+**Tools:** `Git` · `GitHub` · `Docker` · `VS Code` · `Postman`
 
 ---
 
@@ -300,6 +333,7 @@ n8n-portfolio/
 ├── 04-rag-telegram-faq-bot/
 ├── 05-competitor-price-&-offer-monitoring-system/
 ├── 06-fitness-club-lead-capture/
+├── 07-ai-service-request-automation/
 ├── other-projects/
 └── README.md
 ```
@@ -316,6 +350,7 @@ n8n-portfolio/
 | 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Answers Telegram questions from a PDF knowledge base using Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
 | 5 | [Competitor Price Monitoring](./05-competitor-price-&-offer-monitoring-system/) | Collects competitor prices, compares them with history, and sends Telegram reports | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 | 6 | [Fitness Club Trial Workout Funnel](./06-fitness-club-lead-capture/) | Processes trial workout requests with validation, Sheets logging, Telegram alerts, and email confirmation | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
+| 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Handles repair service requests, validates fields, and classifies urgency with AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
 
 ---
 
@@ -492,6 +527,37 @@ Webhook
 - lead handling with and without email without duplicated branches;
 - separate Google Sheets error logging;
 - deterministic lead classification through a Code node.
+
+---
+
+## 7. AI Service Request Automation
+
+**Folder:** [`07-ai-service-request-automation`](./07-ai-service-request-automation/)
+
+A pair of n8n workflows for processing home appliance repair service requests. The main workflow receives a request through a Webhook, checks a request secret, calls a validation sub-workflow, classifies request urgency with an AI Agent, saves the request to Google Sheets, notifies a manager in Telegram for urgent cases, and sends a Gmail confirmation to the customer.
+
+### Core Logic
+
+```text
+Webhook
+→ Secret check
+→ Validation sub-workflow
+→ AI Agent urgency classification
+→ Parse AI answer
+→ Switch
+├── urgent → Google Sheets → Telegram manager notification → success response
+├── today → Google Sheets → email check → Gmail / success response
+└── later → Google Sheets → success response
+```
+
+### What this project demonstrates
+
+- AI-based urgency classification for service requests;
+- main workflow + sub-workflow architecture;
+- invalid AI JSON response handling;
+- urgency-based routing through Switch;
+- valid request and error logging in Google Sheets;
+- separate communication scenarios for the customer and manager.
 
 ---
 
