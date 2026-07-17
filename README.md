@@ -25,6 +25,7 @@ n8n-portfolio/
 ├── 05-competitor-price-&-offer-monitoring-system/
 ├── 06-fitness-club-lead-capture/
 ├── 07-ai-service-request-automation/
+├── 08-barbershop-booking-api/
 ├── other-projects/
 └── README.md
 ```
@@ -42,6 +43,7 @@ n8n-portfolio/
 | 5 | [Мониторинг цен конкурентов](./05-competitor-price-&-offer-monitoring-system/) | Собирает цены с сайтов конкурентов, сравнивает с историей и отправляет Telegram-отчёты | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 | 6 | [Воронка пробных тренировок](./06-fitness-club-lead-capture/) | Обрабатывает заявки на пробную тренировку: валидация, Sheets, Telegram и email-подтверждение | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
 | 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Принимает заявки в сервисный центр, валидирует поля и классифицирует срочность через AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
+| 8 | [Barbershop Booking API](./08-barbershop-booking-api/) | Принимает и валидирует записи клиентов, разделяет логику на sub-workflow и централизованно обрабатывает ошибки | `n8n` · `Webhook API` · `JavaScript` · `Sub-workflows` · `Telegram` · `Error Workflow` |
 
 ---
 
@@ -252,6 +254,49 @@ Webhook
 
 ---
 
+## 8. Barbershop Booking API
+
+**Папка:** [`08-barbershop-booking-api`](./08-barbershop-booking-api/)
+
+Модульная система онлайн-записи для барбершопа, построенная как набор связанных workflow. Основной API принимает запрос клиента, проверяет секрет, передаёт данные в отдельный validation sub-workflow, возвращает понятный HTTP-ответ и запускает уведомления. Критические сбои централизованно обрабатываются отдельным Error Handler.
+
+### Ключевая логика
+
+```text
+Webhook Booking API
+→ Secret check
+→ Execute Validation sub-workflow
+→ IF valid
+├── invalid → HTTP 400 response
+└── valid → booking processing → HTTP success response
+                              └── Notifications workflow
+
+Any critical workflow failure
+→ Barbershop Error Handler
+→ error normalization
+→ Telegram alert
+```
+
+### Архитектура проекта
+
+- **Barbershop Booking API** — принимает заявку и управляет основным сценарием;
+- **Barbershop Validation** — проверяет обязательные поля, телефон, дату и время;
+- **Barbershop Notifications** — отправляет администратору уведомление о новой записи;
+- **Barbershop Error Handler** — принимает критические ошибки из рабочих workflow и отправляет технический алерт.
+
+### Что показывает проект
+
+- декомпозицию одной бизнес-системы на несколько workflow;
+- использование Execute Sub-workflow для повторно используемой логики;
+- проверку секретного токена и входных данных до основной обработки;
+- корректные HTTP-ответы клиенту при успешном и ошибочном запросе;
+- retry-настройки только для нестабильных внешних интеграций;
+- централизованную обработку критических ошибок;
+- разделение бизнес-уведомлений и технических алертов;
+- production-мышление: валидацию, отказоустойчивость и наблюдаемость.
+
+---
+
 ## Остальные проекты
 
 В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
@@ -334,6 +379,7 @@ n8n-portfolio/
 ├── 05-competitor-price-&-offer-monitoring-system/
 ├── 06-fitness-club-lead-capture/
 ├── 07-ai-service-request-automation/
+├── 08-barbershop-booking-api/
 ├── other-projects/
 └── README.md
 ```
@@ -351,6 +397,7 @@ n8n-portfolio/
 | 5 | [Competitor Price Monitoring](./05-competitor-price-&-offer-monitoring-system/) | Collects competitor prices, compares them with history, and sends Telegram reports | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
 | 6 | [Fitness Club Trial Workout Funnel](./06-fitness-club-lead-capture/) | Processes trial workout requests with validation, Sheets logging, Telegram alerts, and email confirmation | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
 | 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Handles repair service requests, validates fields, and classifies urgency with AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
+| 8 | [Barbershop Booking API](./08-barbershop-booking-api/) | Accepts and validates booking requests, separates logic into sub-workflows, and handles failures centrally | `n8n` · `Webhook API` · `JavaScript` · `Sub-workflows` · `Telegram` · `Error Workflow` |
 
 ---
 
@@ -558,6 +605,49 @@ Webhook
 - urgency-based routing through Switch;
 - valid request and error logging in Google Sheets;
 - separate communication scenarios for the customer and manager.
+
+---
+
+## 8. Barbershop Booking API
+
+**Folder:** [`08-barbershop-booking-api`](./08-barbershop-booking-api/)
+
+A modular online booking system for a barbershop, implemented as a set of connected workflows. The main API receives a customer request, checks the secret, delegates validation to a dedicated sub-workflow, returns a clear HTTP response, and triggers notifications. Critical failures are handled centrally by a separate Error Handler.
+
+### Core Logic
+
+```text
+Webhook Booking API
+→ Secret check
+→ Execute Validation sub-workflow
+→ IF valid
+├── invalid → HTTP 400 response
+└── valid → booking processing → HTTP success response
+                              └── Notifications workflow
+
+Any critical workflow failure
+→ Barbershop Error Handler
+→ error normalization
+→ Telegram alert
+```
+
+### Project Architecture
+
+- **Barbershop Booking API** — receives requests and controls the main flow;
+- **Barbershop Validation** — validates required fields, phone number, date, and time;
+- **Barbershop Notifications** — sends new-booking notifications to the administrator;
+- **Barbershop Error Handler** — receives critical workflow failures and sends technical alerts.
+
+### What this project demonstrates
+
+- decomposition of one business system into multiple workflows;
+- reusable logic through Execute Sub-workflow;
+- secret-token and input validation before business processing;
+- correct HTTP responses for successful and invalid requests;
+- retry settings applied only to unstable external integrations;
+- centralized handling of critical failures;
+- separation of business notifications from technical alerts;
+- production-oriented validation, resilience, and observability.
 
 ---
 

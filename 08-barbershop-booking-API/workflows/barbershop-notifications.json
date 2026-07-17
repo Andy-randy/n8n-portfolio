@@ -1,0 +1,172 @@
+{
+  "name": "Barbershop Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Новый клиент!\n{{ $('Start').item.json.name }}, тел.: {{ $('Start').item.json.phone }}, {{ $('Start').item.json.service }}, {{ $('Start').item.json.date }} в {{ $('Start').item.json.time }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        112
+      ],
+      "id": "cf483ecb-eefa-4b47-a67a-bada838d3603",
+      "name": "сообщение менеджеру",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01c1461d-eca3-42bb-9be3-c7537737cfcf",
+              "leftValue": "={{ ($('Start').item.json.email || \"\").replace(/\\s+/g, \"\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "97e603d4-4fc2-4be2-860b-eb25749cc70b",
+              "leftValue": "={{ /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(($('Start').item.json.email || \"\").replace(/\\s+/g, \"\")) }}",
+              "rightValue": "={{ /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test($('Start').item.json.email?.trim() || \"\") }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        112
+      ],
+      "id": "94bf4c47-fd21-43d1-810f-33d15f894200",
+      "name": "проверка email1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Start').item.json.email }}",
+        "subject": "Подтверждение \"BookMe\"",
+        "message": "Ваша запись на услугу обработана. Ожидаем Вас в указанное время. Хорошего дня!",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f46f6c7d-8f7d-4177-847d-62916bdf4ab7",
+      "name": "письмо клиенту",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "service",
+              "type": "any"
+            },
+            {
+              "name": "phone",
+              "type": "any"
+            },
+            {
+              "name": "name",
+              "type": "any"
+            },
+            {
+              "name": "date",
+              "type": "any"
+            },
+            {
+              "name": "time",
+              "type": "any"
+            },
+            {
+              "name": "email",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "fbcc3756-259d-450d-88b4-67c6ec9cc1c6",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -656,
+        112
+      ]
+    }
+  ],
+  "connections": {
+    "сообщение менеджеру": {
+      "main": [
+        [
+          {
+            "node": "проверка email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "проверка email1": {
+      "main": [
+        [
+          {
+            "node": "письмо клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "сообщение менеджеру",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

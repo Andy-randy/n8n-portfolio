@@ -1,0 +1,74 @@
+{
+  "name": "Barbershop Validation",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9c3a595b-17c2-4031-9d4d-f74648e2e6ee",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddf9f686-7f98-4ac8-a7fe-ad11c7c81d69",
+              "name": "phone_normalized",
+              "value": "={{\n(() => {\n  const raw = String($json.query?.phone || $json.phone || '').trim();\n\n  if (/^8\\d{10}$/.test(raw)) {\n    return '7' + raw.slice(1);\n  }\n\n  if (/^(?:7|\\+7)\\d{10}$/.test(raw)) {\n    return raw.replace('+', '');\n  }\n\n  return '';\n})()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "850946a6-b018-4981-9482-3dd0616dad66",
+              "name": "phone_valid",
+              "value": "={{ /^(?:8\\d{10}|7\\d{10}|\\+7\\d{10})$/.test(String($json.phone ?? '').trim()) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "097df1e7-4413-4734-94ca-c676ef6aefb9",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "869ccae5-218b-4566-a27f-eac330cbeb57",
+  "meta": {
+    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
+  },
+  "nodeGroups": [],
+  "id": "drMt5MMPFyKX1n2u",
+  "tags": []
+}
