@@ -93,15 +93,14 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Лист1"
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
         },
         "filtersUI": {
           "values": [
             {
               "lookupColumn": "booking_key",
-              "lookupValue": "={{ $('сбор данных').item.json.booking_key }}"
+              "lookupValue": "={{ $('создание booking_key').item.json.booking_key }}"
             }
           ]
         },
@@ -164,9 +163,8 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Лист1"
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -177,7 +175,7 @@
             "Мастер": "={{ $('сбор данных').item.json.master }}",
             "Дата": "={{ $('сбор данных').item.json.date }}",
             "Время": "={{ $('сбор данных').item.json.time }}",
-            "booking_key": "={{ $('сбор данных').item.json.booking_key }}",
+            "booking_key": "={{ $('создание booking_key').item.json.booking_key }}",
             "Email": "={{ $('сбор данных').item.json.email }}"
           },
           "matchingColumns": [],
@@ -310,7 +308,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "BARBERSHOP_VALIDATION_WORKFLOW_ID",
+          "value": "YOUR_BARBERSHOP_VALIDATION_WORKFLOW_ID",
           "mode": "id"
         },
         "workflowInputs": {
@@ -526,7 +524,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "BARBERSHOP_NOTIFICATIONS_WORKFLOW_ID",
+          "value": "YOUR_BARBERSHOP_NOTIFICATIONS_WORKFLOW_ID",
           "mode": "id"
         },
         "workflowInputs": {

@@ -1,0 +1,145 @@
+{
+  "name": "Append Notion Buttons",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -64
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/databases/YOUR_NOTION_DATABASE_ID/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_TOKEN"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -64
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const pages = $input.first().json.results;\nconst webhookBase = \"YOUR_N8N_WEBHOOK_BASE_URL\";\nconst notionToken = \"YOUR_API_TOKEN\";\n\nreturn pages.map(page => {\n  const pageId = page.id;\n  const topic = page.properties.Name.title[0].plain_text;\n  const buttonUrl = `${webhookBase}?topic=${encodeURIComponent(topic)}&page_id=${pageId.replace(/-/g, '')}`;\n  \n  const body = JSON.stringify({\n    children: [{\n      object: \"block\",\n      type: \"paragraph\",\n      paragraph: {\n        rich_text: [{\n          type: \"text\",\n          text: {\n            content: \"▶ Объясни тему\",\n            link: { url: buttonUrl }\n          }\n        }]\n      }\n    }]\n  });\n\n  return { \n    json: { \n      page_id: pageId,\n      topic: topic,\n      notion_blocks_url: `https://api.notion.com/v1/blocks/${pageId}/children`,\n      button_url: buttonUrl,\n      body: body,\n      token: notionToken\n    } \n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.page_id }}",
+          "mode": "id"
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "▶ Объясни тему",
+                    "isLink": true,
+                    "textLink": "={{ $json.button_url }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Append a block"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append a block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Moscow",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": []
+}

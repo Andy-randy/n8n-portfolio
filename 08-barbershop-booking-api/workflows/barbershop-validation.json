@@ -1,5 +1,5 @@
 {
-  "name": "Barbershop Validation",
+  "name": "Barbershop Booking Validation",
   "nodes": [
     {
       "parameters": {
@@ -44,7 +44,6 @@
       "name": "Edit Fields"
     }
   ],
-  "pinData": {},
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -58,17 +57,12 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "869ccae5-218b-4566-a27f-eac330cbeb57",
-  "meta": {
-    "instanceId": "afefe7c7dbea9cfa5a05e33d209b54d273703ddc59fe3bbb48dea781d68cd07c"
-  },
   "nodeGroups": [],
-  "id": "drMt5MMPFyKX1n2u",
   "tags": []
 }

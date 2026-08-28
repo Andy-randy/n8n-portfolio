@@ -1,355 +1,140 @@
 # AI Service Request Automation
 
-**Production-oriented n8n workflow for automated service request processing with AI-powered urgency classification, reusable validation, Google Sheets logging, Gmail confirmations, Telegram notifications, and structured HTTP responses.**
+A webhook-driven n8n system that validates appliance-repair requests, classifies urgency with a guarded LLM contract, and routes each request to an operationally appropriate response path.
 
-[🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
+[Main workflow](./workflows/ai-service-request-main.json) · [Validation sub-workflow](./workflows/validate-service-request.json) · [AI output example](./examples/sample-output.json) · [Test scenarios](./tests/TEST_CASES.md)
 
-## Screenshots
+> Scope: portfolio demonstration. AI recommends urgency within three allowed values; deterministic validation, parsing, and routing remain outside the model.
 
-### Main workflow
+## Business problem
 
-![Main workflow](./screenshots/main-workflow.png)
+Repair services receive a mixture of emergencies, same-day failures, and non-critical questions. Manual triage can delay leaks or electrical risks, while treating every request as urgent overloads dispatchers.
 
-### Validation sub-workflow
+The intake layer must reject malformed requests, preserve the customer message, constrain the model's output, and make urgent cases visible immediately.
 
-![Validation sub-workflow](./screenshots/validation-sub-workflow.png)
+## Solution
 
----
+The main workflow accepts query parameters and verifies a shared secret. A synchronous sub-workflow requires a name, a plausible phone format, and a non-empty request. Valid data reaches an AI Agent that returns one of three urgency categories with a reason and confidence.
 
-## 🇷🇺 По-русски
-
-## Описание
-
-Два связанных workflow на n8n для автоматизации заявок в сервисный центр по ремонту бытовой техники.
-
-Основной workflow принимает заявку через Webhook, проверяет секрет запроса, вызывает **validation sub-workflow**, классифицирует срочность заявки с помощью LLM, записывает обращение в Google Sheets, уведомляет менеджера в Telegram о срочных заявках и отправляет клиенту email-подтверждение при наличии валидного адреса.
-
-Validation sub-workflow вынесен отдельно, чтобы отделить проверку входных данных от основной бизнес-логики и продемонстрировать использование **переиспользуемого sub-workflow**.
-
----
-
-## Файлы проекта
-
-- [`main-workflow.json`](./main-workflow.json) - основной workflow.
-- [`validation-sub-workflow.json`](./validation-sub-workflow.json) - reusable validation sub-workflow.
-- [`screenshots/main-workflow.png`](./screenshots/main-workflow.png) - скриншот основного workflow.
-- [`screenshots/validation-sub-workflow.png`](./screenshots/validation-sub-workflow.png) - скриншот validation sub-workflow.
-
----
-
-## Features
-
-- Webhook API endpoint
-- Request secret validation
-- Reusable validation sub-workflow
-- AI-powered urgency classification
-- AI response parsing and validation
-- Email validation before sending
-- Google Sheets logging
-- Telegram notifications
-- HTTP responses via Respond to Webhook
-- Production-oriented error handling
-
----
-
-## Что делает workflow
-
-- принимает заявку через **Webhook query parameters**;
-- извлекает имя, телефон, email, описание проблемы и секрет;
-- проверяет секрет;
-- вызывает reusable validation sub-workflow;
-- проверяет обязательные поля и формат телефона;
-- логирует ошибочные заявки в отдельный лист Google Sheets;
-- классифицирует срочность заявки с помощью LLM: `🔴 срочно`, `🟡 сегодня`, `🟢 можно позже`;
-- сохраняет валидные заявки в Google Sheets;
-- отправляет Telegram-уведомление менеджеру для срочных заявок;
-- отправляет email-подтверждение только при валидном email;
-- возвращает HTTP-ответ через Respond to Webhook.
-
-> Note: query parameters используются как демонстрационный формат. В production обычно лучше принимать персональные данные через `POST body`.
-
----
-
-## Стек
-
-- n8n
-- Webhook
-- Execute Workflow
-- AI Agent
-- Groq Chat Model
-- JavaScript Code node
-- IF
-- Switch
-- Respond to Webhook
-- Google Sheets
-- Telegram
-- Gmail
-
----
-
-## Архитектура
-
-```text
-Webhook
-→ Edit Fields
-→ Secret check
-→ Validation sub-workflow
-→ IF valid
-├── invalid request → Error response → Google Sheets (Errors)
-└── valid request → AI-powered urgency classification
-                 → Parse AI answer
-                 → IF AI error
-                     ├── Telegram manager notification → Error response
-                     └── Switch by urgency
-                         ├── Today → Google Sheets → Email validation → Gmail / Success
-                         ├── Urgent → Google Sheets → Telegram → Success
-                         └── Later → Google Sheets → Success
-```
-
-Validation sub-workflow:
-
-```text
-Execute Workflow Trigger
-→ Validate required fields
-→ Validate phone format
-→ Return valid + error_reason
-```
-
----
-
-## Пример входящего запроса
-
-```text
-?name=Anna&phone=+79990000000&email=anna@example.com&request=Стиральная машина течет&secret=YOUR_WEBHOOK_SECRET
-```
-
-Поля:
-
-- `name` - имя клиента;
-- `phone` - телефон клиента;
-- `email` - email клиента, необязательное поле;
-- `request` - описание проблемы;
-- `secret` - простой секрет для проверки запроса.
-
----
-
-## Структура Google Sheets
-
-Лист `Requests`:
-
-```text
-дата | имя | телефон | email | проблема | срочность
-```
-
-Лист `Errors`:
-
-```text
-дата | имя | телефон | email | причина ошибки
-```
-
----
-
-## Как запустить
-
-1. Импортируй `validation-sub-workflow.json` в n8n.
-2. Скопируй ID импортированного validation workflow.
-3. Импортируй `main-workflow.json` в n8n.
-4. В узле `проверка валидации` замени `YOUR_VALIDATION_SUB_WORKFLOW_ID` на ID validation workflow.
-5. В узле `проверка секрета` замени `YOUR_WEBHOOK_SECRET`.
-6. В Google Sheets nodes выбери свою таблицу и листы `Requests` / `Errors`.
-7. В Telegram nodes подключи свои credentials и замени `YOUR_TELEGRAM_CHAT_ID`.
-8. В Gmail node подключи свои credentials.
-9. В Groq Chat Model node подключи свой Groq API credential.
-10. Протестируй Webhook URL и активируй основной workflow.
-
----
-
-## Placeholders
-
-Перед запуском нужно заменить:
-
-- `YOUR_WEBHOOK_SECRET`
-- `YOUR_VALIDATION_SUB_WORKFLOW_ID`
-- `YOUR_GOOGLE_SHEET_ID`
-- `YOUR_TELEGRAM_CHAT_ID`
-
----
-
-## Безопасность
-
-Публичная версия не содержит:
-
-- credentials;
-- реальный Google Sheets document ID;
-- Telegram chat ID;
-- Gmail credential reference;
-- Groq credential reference;
-- n8n instance metadata;
-- internal workflow IDs;
-- cached workflow URLs;
-- hardcoded private secret.
-
----
-
-## 🇬🇧 In English
-
-## Description
-
-Two connected n8n workflows for automating service requests for a home appliance repair center.
-
-The main workflow receives requests through a Webhook, validates a request secret, calls a **reusable validation sub-workflow**, performs **LLM-powered urgency classification**, stores requests in Google Sheets, notifies managers in Telegram for urgent cases, sends Gmail confirmations when a valid email is provided, and returns structured HTTP responses.
-
-The validation logic is implemented as a reusable sub-workflow to keep input validation separate from the main business logic.
-
----
-
-## Project Files
-
-- [`main-workflow.json`](./main-workflow.json) - main workflow.
-- [`validation-sub-workflow.json`](./validation-sub-workflow.json) - reusable validation sub-workflow.
-- [`screenshots/main-workflow.png`](./screenshots/main-workflow.png) - main workflow screenshot.
-- [`screenshots/validation-sub-workflow.png`](./screenshots/validation-sub-workflow.png) - validation sub-workflow screenshot.
-
----
-
-## Features
-
-- Webhook API endpoint
-- Request secret validation
-- Reusable validation sub-workflow
-- AI-powered urgency classification
-- AI response parsing and validation
-- Email validation
-- Google Sheets logging
-- Telegram notifications
-- HTTP responses via Respond to Webhook
-- Production-oriented error handling
-
----
-
-## What the Workflow Does
-
-- receives request data through Webhook query parameters;
-- extracts name, phone, email, request text, and request secret;
-- validates the request secret;
-- calls a separate validation sub-workflow;
-- checks required fields and phone format;
-- logs invalid requests to a separate Google Sheets tab;
-- classifies request urgency with LLM: `🔴 urgent`, `🟡 today`, `🟢 later`;
-- saves valid requests to Google Sheets;
-- sends Telegram manager notifications for urgent requests;
-- sends a Gmail confirmation when a valid email is provided;
-- returns an HTTP response through Respond to Webhook.
-
-> Note: query parameters are used as a demo-friendly input format. In production, personal data is usually better submitted through a `POST body`.
-
----
-
-## Stack
-
-- n8n
-- Webhook
-- Execute Workflow
-- AI Agent
-- Groq Chat Model
-- JavaScript Code node
-- IF
-- Switch
-- Respond to Webhook
-- Google Sheets
-- Telegram
-- Gmail
-
----
+A Code node strips accidental code fences, parses JSON, checks the allowed category set, and enforces confidence between `0` and `1`. A deterministic Switch then writes the request to Google Sheets. Urgent cases alert a manager in Telegram; same-day cases can send a customer email; lower-priority cases are stored and acknowledged.
 
 ## Architecture
 
-```text
-Webhook
-→ Edit Fields
-→ Secret check
-→ Validation sub-workflow
-→ IF valid
-├── invalid request → Error response → Google Sheets (Errors)
-└── valid request → AI-powered urgency classification
-                 → Parse AI answer
-                 → IF AI error
-                     ├── Telegram manager notification → Error response
-                     └── Switch by urgency
-                         ├── Today → Google Sheets → Email validation → Gmail / Success
-                         ├── Urgent → Google Sheets → Telegram → Success
-                         └── Later → Google Sheets → Success
+```mermaid
+flowchart LR
+    Client[Service form] --> Hook[Webhook]
+    Hook --> Auth{Secret valid?}
+    Auth -->|No| R401[401 response]
+    Auth -->|Yes| Sub[Validation sub-workflow]
+    Sub --> Valid{Fields valid?}
+    Valid -->|No| R400[400 response + error log]
+    Valid -->|Yes| Agent[LLM urgency classification]
+    Agent --> Parse[Parse + validate contract]
+    Parse --> AIValid{AI output valid?}
+    AIValid -->|No| Admin[Manager error alert]
+    Admin --> R500[500 response]
+    AIValid -->|Yes| Route{Urgency}
+    Route --> Urgent[Store + manager alert]
+    Route --> Today[Store + optional email]
+    Route --> Later[Store]
+    Urgent --> R200[200 response]
+    Today --> R200
+    Later --> R200
 ```
 
-Validation sub-workflow:
+## Workflow screenshots / Output evidence
+
+**Main workflow**
+
+![AI service request main workflow](./screenshots/main-workflow.png)
+
+**Validation sub-workflow**
+
+![Service request validation workflow](./screenshots/validation-workflow.png)
+
+Synthetic request and model-result contracts: [`sample-input.json`](./examples/sample-input.json) and [`sample-output.json`](./examples/sample-output.json).
+
+## Key engineering decisions
+
+- Required-field and phone-format validation run before the model call.
+- The model can choose only `🔴 срочно`, `🟡 сегодня`, or `🟢 можно позже`.
+- AI JSON is parsed and validated in code before any category reaches the Switch.
+- Confidence must be numeric and remain within `0–1`; malformed output becomes a visible error.
+- Urgent cases add a manager notification, while same-day cases optionally confirm by email.
+- All accepted categories are persisted to a common requests sheet.
+
+## Input and output contract
+
+**Trigger:** HTTP webhook using query parameters.
+
+**Required input:** `name`, `phone`, `request`, and `secret`. Phone must match `7–20` characters from digits, whitespace, parentheses, plus, or hyphen.
+
+**Optional input:** `email`.
+
+**AI output:** strict JSON with `urgency`, `reason`, and numeric `confidence` from `0` to `1`.
+
+**HTTP output:** `401` for invalid authentication, `400` for validation failure, `500` for invalid AI output or a configured write failure branch, and `200` for an accepted request.
+
+**Business output:** request row in Google Sheets; Telegram manager alert for urgent requests; optional Gmail confirmation for same-day requests.
+
+## Failure handling
+
+- Invalid authentication stops before sub-workflow and model execution.
+- Missing name or request and invalid phone return a reasoned validation error and are logged.
+- Invalid AI JSON, unsupported urgency, or out-of-range confidence triggers an operator alert and `500` response.
+- The urgent and later Sheets nodes expose configured error outputs with `500` responses.
+- Side effects are sequential and are not compensated if a later notification fails.
+
+## Repository structure
 
 ```text
-Execute Workflow Trigger
-→ Validate required fields
-→ Validate phone format
-→ Return valid + error_reason
+07-ai-service-request-automation/
+├── README.md
+├── workflows/
+│   ├── ai-service-request-main.json
+│   └── validate-service-request.json
+├── screenshots/
+├── examples/
+└── tests/TEST_CASES.md
 ```
-
----
-
-## Example Request
-
-```text
-?name=Anna&phone=+79990000000&email=anna@example.com&request=Washing machine is leaking&secret=YOUR_WEBHOOK_SECRET
-```
-
-Fields:
-
-- `name` - customer name;
-- `phone` - customer phone number;
-- `email` - optional customer email;
-- `request` - problem description;
-- `secret` - simple request secret.
-
----
-
-## Google Sheets Structure
-
-`Requests` sheet:
-
-```text
-date | name | phone | email | problem | urgency
-```
-
-`Errors` sheet:
-
-```text
-date | name | phone | email | error reason
-```
-
----
 
 ## Setup
 
-1. Import `validation-sub-workflow.json` into n8n.
-2. Copy the imported validation workflow ID.
-3. Import `main-workflow.json` into n8n.
-4. In the `проверка валидации` node, replace `YOUR_VALIDATION_SUB_WORKFLOW_ID` with the validation workflow ID.
-5. In the `проверка секрета` node, replace `YOUR_WEBHOOK_SECRET`.
-6. In Google Sheets nodes, select your spreadsheet and the `Requests` / `Errors` tabs.
-7. In Telegram nodes, connect your credentials and replace `YOUR_TELEGRAM_CHAT_ID`.
-8. In the Gmail node, connect your credentials.
-9. In the Groq Chat Model node, connect your Groq API credential.
-10. Test the Webhook URL and activate the main workflow.
+1. Import both workflow exports.
+2. Configure Groq, Google Sheets, Telegram, and Gmail credentials in n8n.
+3. Replace `YOUR_API_SECRET`, `YOUR_SERVICE_VALIDATION_WORKFLOW_ID`, `YOUR_GOOGLE_SHEET_ID`, `YOUR_TELEGRAM_CHAT_ID`, and any target sheet name.
+4. Select the imported validation workflow in the Execute Workflow node.
+5. Verify every urgency branch and malformed-model test before activation.
+
+## Test scenarios
+
+The manual suite covers authentication, missing fields, phone formats, each urgency, low confidence boundaries, unsupported categories, malformed JSON, optional email, and downstream failures. See [`tests/TEST_CASES.md`](./tests/TEST_CASES.md).
+
+## Known limitations
+
+- The API secret is supplied through a query parameter.
+- The phone regex checks shape, not whether the number is real or reachable.
+- AI urgency has no labeled evaluation set, human feedback loop, or calibrated decision threshold.
+- There is no request idempotency, duplicate check, rate limit, or transactional outbox.
+- Today, urgent, and later branches do not provide identical notification behavior.
+
+## Production hardening path
+
+- move to a versioned JSON API behind signed authentication and rate limiting;
+- add idempotency storage and unique request identifiers;
+- evaluate urgency classification against labeled safety-critical examples;
+- define a low-confidence manual-review policy instead of accepting every valid score;
+- queue notifications and add retries, dead-letter handling, and delivery status;
+- centralize redacted error logging, metrics, alerts, and retention controls.
+
+## Tech stack
+
+`n8n` · `Webhook API` · `Groq` · `JavaScript` · `Google Sheets` · `Telegram Bot API` · `Gmail`
 
 ---
 
-## Placeholders
+## Русская версия
 
-Before running the workflow, replace:
+Система принимает заявку на ремонт, проверяет обязательные поля и формат телефона, затем просит LLM выбрать одну из трёх категорий срочности. Ответ модели не передаётся дальше напрямую: отдельный Code node валидирует JSON, допустимое значение urgency и диапазон confidence.
 
-- `YOUR_WEBHOOK_SECRET`
-- `YOUR_VALIDATION_SUB_WORKFLOW_ID`
-- `YOUR_GOOGLE_SHEET_ID`
-- `YOUR_TELEGRAM_CHAT_ID`
-
----
-
-## Public Version Notes
-
-The public version does not contain credentials, real Google Sheets IDs, Telegram chat IDs, Gmail/Groq credential references, n8n instance metadata, internal workflow IDs, cached workflow URLs, or hardcoded private secrets.
+После этого работает обычный Switch. Срочные заявки записываются и отправляются менеджеру, заявки «сегодня» могут получить email-подтверждение, менее срочные сохраняются без немедленного оповещения. Для production нужны идемпотентность, очередь уведомлений, оценка качества классификации и политика ручной проверки при низкой уверенности.

@@ -1,5 +1,5 @@
 {
-  "name": "Barbershop Error Handler",
+  "name": "Barbershop Booking Error Handler",
   "nodes": [
     {
       "parameters": {},
@@ -39,9 +39,8 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1164117101,
-          "mode": "list",
-          "cachedResultName": "error"
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -49,8 +48,7 @@
             "Дата": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
             "Workflow": "={{ $json.workflow.name }}",
             "Нода": "={{ $json.execution.lastNodeExecuted }}",
-            "Ошибка": "={{ $json.execution.error.description }}",
-            "Input Data": "={{ JSON.stringify($json.execution.error.node.parameters, null, 2) }}"
+            "Ошибка": "={{ $json.execution.error.description }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -84,15 +82,6 @@
             {
               "id": "Ошибка",
               "displayName": "Ошибка",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Input Data",
-              "displayName": "Input Data",
               "required": false,
               "defaultMatch": false,
               "display": true,

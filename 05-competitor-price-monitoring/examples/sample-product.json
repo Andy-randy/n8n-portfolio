@@ -1,0 +1,9 @@
+{
+  "competitor": "Example Store",
+  "source_url": "https://example.com/products/phone-a",
+  "product_name": "Phone A 128 GB",
+  "normalized_product": "phone a 128 gb",
+  "price": 49900,
+  "currency": "RUB",
+  "observed_at": "2026-08-28T09:00:00+03:00"
+}

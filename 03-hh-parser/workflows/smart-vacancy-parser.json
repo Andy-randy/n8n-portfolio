@@ -1,0 +1,558 @@
+{
+  "name": "Smart Vacancy Parser",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.hh.ru/vacancies",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "n8n автоматизация"
+            },
+            {
+              "name": "area",
+              "value": "113"
+            },
+            {
+              "name": "per_page",
+              "value": "10"
+            },
+            {
+              "name": "salary",
+              "value": "100000"
+            },
+            {
+              "name": "only_with_salary",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Название: {{ $json.название }}\nКомпания: {{ $json.компания }}\nЗарплата: {{ $json.зарплата }}\nФормат: {{ $json.формат }}\nТребования: {{ $json.требования }}\nОбязанности: {{ $json.обязанности }}\nСсылка: {{ $json.ссылка }}",
+        "options": {
+          "systemMessage": "Ты — HR-аналитик. Оцени смысловую релевантность вакансии для специалиста по n8n, AI/LLM automation, API-интеграциям и бизнес-процессам. Не сравнивай зарплату численно и не принимай решение о формате работы: это проверяет детерминированная ветка workflow.\n\nВерни только валидный JSON без Markdown:\n{\n  \"score\": 0,\n  \"verdict\": \"strong_match|review|low_match\",\n  \"strengths\": [\"...\"],\n  \"risks\": [\"...\"],\n  \"summary\": \"одно короткое предложение\"\n}\n\nscore — целое число от 0 до 100. Не придумывай требования, которых нет во входных данных."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        240,
+        192
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vacancies = items[0]?.json?.items ?? [];\n\nreturn vacancies.map((vacancy) => ({\n  json: {\n    название: vacancy.name ?? '',\n    компания: vacancy.employer?.name ?? '',\n    зарплата: vacancy.salary?.from ?? vacancy.salary?.to ?? null,\n    валюта: vacancy.salary?.currency ?? null,\n    ссылка: vacancy.alternate_url ?? '',\n    формат: vacancy.schedule?.name ?? '',\n    требования: vacancy.snippet?.requirement ?? '',\n    обязанности: vacancy.snippet?.responsibility ?? ''\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_4",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        80,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "leftValue": "={{ $('Code in JavaScript').item.json['зарплата'] }}",
+              "rightValue": 100000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "leftValue": "={{ $('Code in JavaScript').item.json['формат'] }}",
+              "rightValue": "Удаленная работа",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4a7cb7a2-6052-46bf-9171-c94ac69f6e13",
+              "leftValue": "={{ $json.ai_score }}",
+              "rightValue": 60,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "название",
+              "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "компания",
+              "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "зарплата",
+              "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
+              "type": "number"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "формат",
+              "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "ссылка",
+              "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "d942462b-2e0e-4e27-a02d-c4460ab68aaa",
+              "name": "ai_score",
+              "value": "={{ $json.ai_score }}",
+              "type": "number"
+            },
+            {
+              "id": "8194373f-2f90-45b8-a76a-d43403da1763",
+              "name": "ai_summary",
+              "value": "={{ $json.ai_summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        -176
+      ],
+      "id": "REDACTED_NODE_ID_7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Вакансии, к которым стоит присмотреться! {{ $json['текст'] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        -176
+      ],
+      "id": "REDACTED_NODE_ID_8",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Вакансии для ручной проверки: {{ $json[\"текст\"] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        16
+      ],
+      "id": "REDACTED_NODE_ID_9",
+      "name": "Send a text message1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -176
+      ],
+      "id": "REDACTED_NODE_ID_10",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vacancies = items[0]?.json?.data ?? [];\n\nconst text = vacancies.length\n  ? vacancies.map((vacancy) =>\n      `📌 ${vacancy.название}\\n🏢 ${vacancy.компания}\\n💰 ${vacancy.зарплата ?? 'не указана'} ${vacancy.валюта ?? ''}\\n🤖 Score: ${vacancy.ai_score}/100 — ${vacancy.ai_summary}\\n🔗 ${vacancy.ссылка}`\n    ).join('\\n\\n---\\n\\n')\n  : 'Подходящих вакансий не найдено.';\n\nreturn [{ json: { текст: text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -176
+      ],
+      "id": "REDACTED_NODE_ID_11",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        16
+      ],
+      "id": "REDACTED_NODE_ID_12",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vacancies = items[0]?.json?.data ?? [];\n\nconst text = vacancies.length\n  ? vacancies.map((vacancy) =>\n      `📌 ${vacancy.название}\\n🏢 ${vacancy.компания}\\n💰 ${vacancy.зарплата ?? 'не указана'} ${vacancy.валюта ?? ''}\\n🤖 Score: ${vacancy.ai_score}/100 — ${vacancy.ai_summary}\\n🔗 ${vacancy.ссылка}`\n    ).join('\\n\\n---\\n\\n')\n  : 'Вакансий для ручной проверки нет.';\n\nreturn [{ json: { текст: text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        16
+      ],
+      "id": "REDACTED_NODE_ID_13",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "название",
+              "value": "={{ $('Code in JavaScript').item.json[\"название\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "компания",
+              "value": "={{ $('Code in JavaScript').item.json[\"компания\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "зарплата",
+              "value": "={{ $('Code in JavaScript').item.json[\"зарплата\"] }}",
+              "type": "number"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "формат",
+              "value": "={{ $('Code in JavaScript').item.json[\"формат\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "ссылка",
+              "value": "={{ $('Code in JavaScript').item.json[\"ссылка\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4dd2ada2-3db0-455b-b204-a816198c7fe9",
+              "name": "ai_score",
+              "value": "={{ $json.ai_score }}",
+              "type": "number"
+            },
+            {
+              "id": "6116a75b-c66d-49b5-b111-60a9e5dfa2d8",
+              "name": "ai_summary",
+              "value": "={{ $json.ai_summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        16
+      ],
+      "id": "REDACTED_NODE_ID_14",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output ?? '';\nlet cleaned = raw;\n\nif (typeof cleaned === 'string') {\n  cleaned = cleaned\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/```$/i, '')\n    .trim();\n}\n\ntry {\n  const parsed = typeof cleaned === 'string' ? JSON.parse(cleaned) : cleaned;\n  const score = Number(parsed?.score);\n  const verdicts = new Set(['strong_match', 'review', 'low_match']);\n\n  if (!Number.isFinite(score) || score < 0 || score > 100) {\n    throw new Error('invalid score');\n  }\n  if (!verdicts.has(parsed?.verdict)) {\n    throw new Error('invalid verdict');\n  }\n\n  return [{\n    json: {\n      ai_score: Math.round(score),\n      ai_verdict: parsed.verdict,\n      ai_strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],\n      ai_risks: Array.isArray(parsed.risks) ? parsed.risks : [],\n      ai_summary: String(parsed.summary || ''),\n      ai_error: false\n    }\n  }];\n} catch (error) {\n  return [{\n    json: {\n      ai_score: 0,\n      ai_verdict: 'review',\n      ai_strengths: [],\n      ai_risks: [],\n      ai_summary: 'AI assessment unavailable; review manually.',\n      ai_error: true\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        0
+      ],
+      "id": "0c4b9b14-7be1-4b0e-8f13-5372e8ebd1a1",
+      "name": "Parse AI Assessment"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Assessment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Assessment": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}

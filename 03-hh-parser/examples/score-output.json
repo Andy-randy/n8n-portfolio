@@ -1,0 +1,12 @@
+{
+  "score": 86,
+  "verdict": "strong_match",
+  "strengths": [
+    "n8n and API integration are explicit requirements",
+    "The role includes LLM-enabled business automation"
+  ],
+  "risks": [
+    "Production operations experience should be clarified"
+  ],
+  "summary": "Strong semantic match; verify the operational expectations before applying."
+}

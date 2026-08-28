@@ -1,0 +1,8 @@
+{
+  "customer_name": "Anna Petrova",
+  "service": "Demo service",
+  "specialist": "any",
+  "appointment_at": "2026-09-04T15:00:00+03:00",
+  "phone": "+79000000000",
+  "email": "anna@example.com"
+}

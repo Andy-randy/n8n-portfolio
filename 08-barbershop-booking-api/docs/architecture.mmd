@@ -16,7 +16,7 @@ flowchart LR
         Duplicate -->|Yes| R200D[200 Booking already exists]
         Duplicate -->|No| Append[Append booking to Google Sheets]
         Append --> R200C[200 Booking created]
-        R200C -->|Do not wait| Notifications
+        R200C -. Do not wait .-> Notifications
     end
 
     subgraph Notifications["Barbershop Notifications"]
@@ -28,7 +28,7 @@ flowchart LR
     end
 
     subgraph Errors["Centralized Error Handler"]
-        ErrorTrigger[Error Trigger] --> ErrorLog[Append error to Google Sheets]
+        ErrorTrigger[Error Trigger] --> ErrorLog[Append minimal error metadata]
         ErrorLog --> Alert[Send Telegram alert]
     end
 

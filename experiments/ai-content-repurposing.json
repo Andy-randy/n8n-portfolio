@@ -1,0 +1,222 @@
+{
+  "name": "AI Content Repurposing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-content-repurposing",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        -32
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body['текст'] }}",
+        "options": {
+          "systemMessage": "Ты получаешь статью, создай из неё:\n\n🐦 Пост для Twitter/X (до 280 символов)\n📱 Пост для Instagram (с эмодзи и хэштегами)\n💼 Пост для LinkedIn (профессиональный тон)\n📧 Email рассылка (тема + текст)\n\nВерни JSON с четырьмя полями сразу"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        160
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.output;\nconst cleaned = raw.replace(/```json\\n|```/g, '').trim();\nconst data = JSON.parse(cleaned);\n\nreturn [{\n  json: {\n    twitter: data.twitter,\n    instagram: data.instagram,\n    linkedin: data.linkedin,\n    email_тема: data.email.тема,\n    email_текст: data.email.текст\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -32
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "X": "={{ $json.twitter }}",
+            "Instagram": "={{ $json.instagram }}",
+            "LinkedIn": "={{ $json.linkedin }}",
+            "Email": "=Тема: {{ $json[\"email_тема\"] }}, Текст: {{ $json[\"email_текст\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "X",
+              "displayName": "X",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram",
+              "displayName": "Instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "REDACTED_NODE_ID_4",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=X: {{ $json.X }}\nInstagram: {{ $json.Instagram }}\nLinkedIn: {{ $json.LinkedIn }}\nEmail: {{ $json.Email }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "REDACTED_NODE_ID_5",
+      "name": "Send a text message"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}

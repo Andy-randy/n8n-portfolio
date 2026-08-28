@@ -1,719 +1,176 @@
-# n8n Portfolio · Daria Lesnikova
+# n8n Automation & Integration Portfolio
 
-Портфолио workflow-проектов на **n8n** с интеграцией **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24 и Notion**.
+Production-oriented case studies showing how business workflows can combine n8n, APIs, AI/LLMs, data stores, and operator-facing integrations.
 
-Здесь собраны автоматизации, которые решают практические бизнес-задачи: обработка заявок, квалификация лидов, клиентская коммуникация, парсинг данных, мониторинг цен, уведомления и логирование.
+The projects document validation, deterministic routing, structured model outputs, error handling, logging, known limitations, testing, and deployment considerations—not only successful workflow screenshots.
 
-An n8n workflow portfolio with **LLM, API, Telegram, Google Sheets, Gmail, Bitrix24, and Notion** integrations.
+[Featured projects](#featured-case-studies) · [All case studies](#project-index) · [Engineering principles](#engineering-principles) · [Security and setup](#security-and-setup) · [Русская версия](#русская-версия)
 
-The repository contains practical automation projects for lead processing, AI qualification, customer communication, data parsing, price monitoring, notifications, and logging.
+## Start here: Barbershop Booking API
 
-[🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
+The flagship case study is a modular booking API split across request handling, phone validation, asynchronous notifications, and centralized error reporting.
 
----
+Its strongest engineering signal is explicit boundaries: the API responds after persistence, notifications do not block the client, and the documentation distinguishes practical retry deduplication from true concurrency-safe idempotency.
 
-## 🇷🇺 По-русски
+**Stack:** `n8n` · `Webhook API` · `Google Sheets` · `Telegram` · `Gmail`
 
-## Структура репозитория
+[Open the Barbershop Booking API repository](https://github.com/Andy-randy/barbershop-booking-api)
 
-```text
-n8n-portfolio/
-├── 01-ai-sales-assistant/
-├── 02-lead-funnel/
-├── 03-hh-parser/
-├── 04-rag-telegram-faq-bot/
-├── 05-competitor-price-&-offer-monitoring-system/
-├── 06-fitness-club-lead-capture/
-├── 07-ai-service-request-automation/
-├── 08-barbershop-booking-api/
-├── other-projects/
-└── README.md
-```
+![Barbershop Booking API main workflow](https://raw.githubusercontent.com/Andy-randy/barbershop-booking-api/main/screenshots/main-workflow.png)
 
----
+## Featured case studies
 
-## Featured-кейсы
+### 1. Barbershop Booking API
 
-| # | Проект | Что делает | Стек |
-|---|--------|------------|------|
-| 1 | [AI-ассистент продаж](./01-ai-sales-assistant/) | Ведёт клиента в Telegram, собирает данные и помогает оформить заказ | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [Воронка лидов с LLM-классификатором](./02-lead-funnel/) | Делит заявки на холодные / тёплые / горячие и запускает разные сценарии | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
-| 3 | [Умный парсер вакансий](./03-hh-parser/) | Получает вакансии через API, фильтрует и оценивает их через LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
-| 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Отвечает на вопросы в Telegram по базе знаний из PDF через Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
-| 5 | [Мониторинг цен конкурентов](./05-competitor-price-&-offer-monitoring-system/) | Собирает цены с сайтов конкурентов, сравнивает с историей и отправляет Telegram-отчёты | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
-| 6 | [Воронка пробных тренировок](./06-fitness-club-lead-capture/) | Обрабатывает заявки на пробную тренировку: валидация, Sheets, Telegram и email-подтверждение | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
-| 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Принимает заявки в сервисный центр, валидирует поля и классифицирует срочность через AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
-| 8 | [Barbershop Booking API](./08-barbershop-booking-api/) | Принимает и валидирует записи клиентов, разделяет логику на sub-workflow и централизованно обрабатывает ошибки | `n8n` · `Webhook API` · `JavaScript` · `Sub-workflows` · `Telegram` · `Error Workflow` |
+**Business use case:** accept booking requests, validate customer data, avoid ordinary retry duplicates, store the booking, and notify the manager and customer.
 
----
+**Engineering focus:** sub-workflow boundaries, normalized idempotency key, non-blocking notifications, minimal error logs, and an honest account of Google Sheets concurrency limits.
 
-## 1. AI-ассистент продаж
+**Stack:** `n8n` · `Webhooks` · `Google Sheets` · `Telegram Bot API` · `Gmail`
 
-**Папка:** [`01-ai-sales-assistant`](./01-ai-sales-assistant/)
+[Case study](https://github.com/Andy-randy/barbershop-booking-api)
 
-AI-ассистент для Telegram, который ведёт клиента по сценарию продажи: отвечает на вопросы, собирает нужные данные и определяет, когда можно оформлять заказ.
+### 2. RAG Telegram FAQ Bot
 
-### Ключевая логика
+**Business use case:** index a controlled document and answer recurring Telegram questions from retrieved knowledge.
 
-```text
-Telegram Trigger
-→ AI Agent + Simple Memory
-→ IF
-├── уточняющий вопрос клиенту
-└── подтверждение заказа → Google Sheets → Telegram manager notification
-```
+**Engineering focus:** separate ingestion and query paths, vector retrieval as an agent tool, deterministic `/start` routing, and explicit gaps around citations, relevance thresholds, and re-indexing.
 
-### Что показывает проект
+**Stack:** `n8n` · `Supabase / pgvector` · `Hugging Face` · `Groq` · `Telegram`
 
-- работу AI Agent в n8n;
-- использование Simple Memory;
-- диалоговую логику без жёсткого if-else по ключевым словам;
-- запись структурированных данных в Google Sheets;
-- уведомление менеджера.
+[Case study](https://github.com/Andy-randy/rag-telegram-faq-bot)
 
----
+![RAG Telegram query workflow](https://raw.githubusercontent.com/Andy-randy/rag-telegram-faq-bot/main/screenshots/query-workflow.png)
 
-## 2. Воронка лидов с LLM-классификатором
+### 3. AI Lead Processing Pipeline
 
-**Папка:** [`02-lead-funnel`](./02-lead-funnel/)
+**Business use case:** validate inbound leads, assess intent, and route hot, warm, and cold contacts to different sales actions.
 
-Workflow для автоматической обработки входящих заявок. Система принимает заявку через Webhook, анализирует её с помощью AI Agent и распределяет лид по температуре.
+**Engineering focus:** validation before AI, controlled model-output parsing, deterministic Switch routing, explicit AI-failure response, and channel-specific side effects.
 
-### Ключевая логика
+**Stack:** `n8n` · `Groq` · `CRM REST API` · `Google Sheets` · `Telegram` · `Gmail`
 
-```text
-Webhook
-→ AI Agent
-→ Code node
-→ Switch
-├── холодный лид → email + Google Sheets
-├── тёплый лид → email + Google Sheets
-├── горячий лид → Telegram manager ping + Bitrix24 CRM
-└── fallback → Telegram error notification
-```
+[Case study](https://github.com/Andy-randy/ai-lead-processing-pipeline)
 
-### Что показывает проект
+![AI lead pipeline workflow](https://raw.githubusercontent.com/Andy-randy/ai-lead-processing-pipeline/main/screenshots/workflow-overview.png)
 
-- AI-классификацию заявок;
-- нормализацию JSON-ответа модели через Code node;
-- извлечение бюджета из текста заявки;
-- маршрутизацию через Switch;
-- интеграцию с Bitrix24 через REST API;
-- fallback-ветку на случай некорректного AI-ответа.
+### 4. Competitor Price Monitoring
 
----
+**Business use case:** monitor public product pages, compare observed prices with stored history, and alert operators to meaningful changes.
 
-## 3. Умный парсер вакансий с LLM-скорингом
+**Engineering focus:** separate fetch and extraction failures, deterministic numeric comparison, AI used only for explanation, and documented selector and legal risks.
 
-**Папка:** [`03-hh-parser`](./03-hh-parser/)
+**Stack:** `n8n` · `HTTP / HTML extraction` · `JavaScript` · `Groq` · `Google Sheets` · `Telegram`
 
-Workflow для поиска и первичной оценки вакансий. Он получает вакансии через HH.ru API, нормализует данные, оценивает вакансии через AI и отправляет результат в Telegram.
+[Case study](./05-competitor-price-monitoring/README.md)
 
-### Ключевая логика
+![Competitor price monitoring workflow](./05-competitor-price-monitoring/screenshots/workflow-overview.png)
 
-```text
-Manual / Schedule Trigger
-→ HH.ru API
-→ Code node
-→ Loop Over Items
-→ AI Agent
-→ IF
-→ Aggregate
-→ Telegram digest
-```
+## Project index
 
-### Что показывает проект
+| # | Case study | Business use case | Key engineering signal |
+| ---: | --- | --- | --- |
+| 01 | [AI Sales Assistant](./01-ai-sales-assistant/README.md) | Collect booking details through a Telegram conversation | Short-term state plus deterministic completion routing |
+| 02 | [AI Lead Processing Pipeline](https://github.com/Andy-randy/ai-lead-processing-pipeline) | Qualify and route sales leads | Guarded AI output and explicit branch responses |
+| 03 | [Smart Vacancy Parser](./03-hh-parser/README.md) | Rank job opportunities and build review digests | Normalization plus deterministic and semantic gates |
+| 04 | [RAG Telegram FAQ Bot](https://github.com/Andy-randy/rag-telegram-faq-bot) | Answer questions from an indexed knowledge source | Separate ingestion/query boundaries and retrieval constraints |
+| 05 | [Competitor Price Monitoring](./05-competitor-price-monitoring/README.md) | Detect public price changes | Deterministic comparison with AI-only enrichment |
+| 06 | [Fitness Club Lead Capture](./06-fitness-club-lead-capture/README.md) | Validate and distribute campaign leads | Reusable validation and conditional email path |
+| 07 | [AI Service Request Automation](./07-ai-service-request-automation/README.md) | Triage appliance-repair requests | Strict urgency contract and operator-visible AI failures |
+| 08 | [Barbershop Booking API](https://github.com/Andy-randy/barbershop-booking-api) | Create and notify on bookings | Modular API flow and practical idempotency boundary |
 
-- работу с внешним API;
-- обработку массива данных;
-- разделение AI-оценки и детерминированной фильтрации;
-- сборку дайджеста через Aggregate + Code;
-- Telegram-уведомления.
+Supporting workflow sketches live in [`experiments/`](./experiments/README.md). They are sanitized examples, not featured case studies.
 
----
+## Engineering principles
 
-## 4. RAG Telegram FAQ Bot
+- Use AI only where semantic judgment, retrieval, or summarization adds value.
+- Keep validation, authentication, routing, and state transitions deterministic whenever possible.
+- Parse and validate structured model outputs before they affect business actions.
+- Define responsibility boundaries between intake, persistence, notification, and error handling.
+- Retry only suitable external operations and document where retries are insufficient.
+- Make failures visible through explicit responses, logs, and operator notifications.
+- Publish sanitized, inactive workflow exports with `YOUR_*` placeholders.
+- Document limitations such as non-atomic storage, missing availability checks, and model uncertainty.
+- Treat examples and test scenarios as contracts, not decorative repository files.
 
-**Папка:** [`04-rag-telegram-faq-bot`](./04-rag-telegram-faq-bot/)
+## What the case studies demonstrate
 
-Telegram FAQ-бот на базе RAG: отдельный workflow загружает PDF-документы в Supabase Vector Store, а второй workflow принимает вопросы пользователей, ищет релевантные фрагменты и отвечает через Groq.
+### Workflow design
 
-### Ключевая логика
+- webhook and Telegram intake;
+- synchronous and asynchronous sub-workflows;
+- deterministic IF and Switch routing;
+- scheduled collection and batch processing;
+- explicit success and failure responses.
+
+### AI and data patterns
+
+- LLM classification with controlled outputs;
+- retrieval-augmented generation with a vector store;
+- bounded conversation memory;
+- semantic scoring combined with deterministic conditions;
+- AI enrichment placed after deterministic change detection.
+
+### Integration patterns
+
+- Google Sheets as inspectable portfolio persistence;
+- Telegram and Gmail notifications;
+- CRM and generic REST API calls;
+- Google Drive document ingestion;
+- Supabase vector retrieval.
+
+## Repository conventions
+
+Full case studies follow a common structure where the project needs each artifact:
 
 ```text
-Google Drive PDF
-→ Extract From File
-→ Embeddings
-→ Supabase Vector Store
-
-Telegram Trigger
-→ AI Agent
-→ Supabase Vector Store Tool
-→ Groq Chat Model
-→ Telegram Response
-→ Google Sheets Logging
+project-name/
+├── README.md
+├── workflows/
+├── screenshots/
+├── examples/
+└── tests/TEST_CASES.md
 ```
 
-### Что показывает проект
+Every README is English-first and follows the same sequence: business problem, solution, architecture, evidence, decisions, contracts, failures, setup, tests, limitations, and production hardening.
 
-- RAG-архитектуру в n8n;
-- раздельные ingest/query workflow;
-- работу с Supabase Vector Store и embeddings;
-- Telegram-бота с `/start` onboarding;
-- логирование вопросов и ответов в Google Sheets.
+## Security and setup
 
----
+The public JSON exports are intentionally inactive. Credential mappings, webhook instance IDs, account-specific resource IDs, pinned execution data, and instance metadata have been removed.
 
-## 5. Мониторинг цен и предложений конкурентов
+To inspect a workflow safely:
 
-**Папка:** [`05-competitor-price-&-offer-monitoring-system`](./05-competitor-price-&-offer-monitoring-system/)
+1. read its README and limitations;
+2. import it into a non-production n8n workspace;
+3. attach credentials manually;
+4. replace every `YOUR_*` value;
+5. use synthetic test data;
+6. run the documented scenarios before activation.
 
-Workflow для ежедневного мониторинга цен конкурентов. Система собирает товары с нескольких e-commerce сайтов, нормализует цены, сравнивает их с историей в Google Sheets и отправляет отчёты и алерты в Telegram.
+These projects are reference implementations, not one-click production deployments. Authentication, personal-data handling, retention, service quotas, and legal constraints must be adapted to the deployment context.
 
-### Ключевая логика
+## Validation
 
-```text
-Schedule Trigger
-→ Competitors list
-→ HTTP Request
-→ HTML / custom enrichment
-→ Prepare products
-├── daily Telegram report
-└── Google Sheets history → price comparison → AI analysis → Telegram alert
+The repository includes local checks for JSON parsing, inactive exports, removed metadata and credential mappings, public placeholders, workflow connection integrity, Markdown links and code fences, image media types, and public path naming.
+
+```bash
+node scripts/validate-portfolio.mjs
 ```
 
-### Что показывает проект
+The [`scripts/sanitize-workflows.mjs`](./scripts/sanitize-workflows.mjs) script makes the public-export rules repeatable, but every diff still requires human review because automated sanitization cannot prove that arbitrary prompt text is non-sensitive.
 
-- парсинг нескольких сайтов с разными CSS-селекторами;
-- обработку сайта, где цены подгружаются отдельным JSON-запросом;
-- нормализацию названий и цен;
-- сравнение с историей в Google Sheets;
-- Telegram-отчёты и алерты;
-- AI-анализ изменения цены.
+## About
 
----
+Built by [Daria Lesnikova](https://github.com/Andy-randy), focused on AI automation, API integration, and reliable business workflow design.
 
-## 6. Воронка пробных тренировок для фитнес-клуба
-
-**Папка:** [`06-fitness-club-lead-capture`](./06-fitness-club-lead-capture/)
-
-Связка из основного workflow и validation sub-workflow для обработки заявок на пробную тренировку. Система принимает заявку через Webhook, проверяет секрет, валидирует обязательные поля, классифицирует лида по цели, записывает результат в Google Sheets, уведомляет менеджера в Telegram и отправляет email клиенту при наличии валидного адреса.
-
-### Ключевая логика
-
-```text
-Webhook
-→ Code node
-→ Secret check
-→ Validation sub-workflow
-→ Google Sheets
-→ Telegram manager notification
-→ IF email valid
-├── Gmail confirmation
-└── success response
-```
-
-### Что показывает проект
-
-- связку main workflow + sub-workflow;
-- server-side validation before lead processing;
-- обработку заявок с email и без email без дублирующих веток;
-- логирование ошибок в отдельный лист Google Sheets;
-- простую deterministic-классификацию лида через Code node.
+For project or collaboration discussions, use the contact links on the [GitHub profile](https://github.com/Andy-randy).
 
 ---
 
-## 7. AI Service Request Automation
+## Русская версия
 
-**Папка:** [`07-ai-service-request-automation`](./07-ai-service-request-automation/)
+Это портфолио production-oriented автоматизаций на n8n: API и webhook-интеграции, LLM-классификация, RAG, CRM-сценарии, Telegram/Gmail и работа с данными. В каждом полноценном кейсе показаны не только happy path, но и контракты, валидация, ошибки, тесты, ограничения и путь к production.
 
-Связка из основного workflow и validation sub-workflow для обработки заявок в сервисный центр по ремонту бытовой техники. Система принимает заявку через Webhook, проверяет секрет, валидирует обязательные поля, классифицирует срочность обращения через AI Agent, записывает заявку в Google Sheets, уведомляет менеджера в Telegram о срочных обращениях и отправляет email-подтверждение клиенту.
+Начать лучше с четырёх проектов: **Barbershop Booking API**, **RAG Telegram FAQ Bot**, **AI Lead Processing Pipeline** и **Competitor Price Monitoring**. Подробные схемы, примеры и тестовые сценарии находятся в README соответствующих проектов.
 
-### Ключевая логика
-
-```text
-Webhook
-→ Secret check
-→ Validation sub-workflow
-→ AI Agent urgency classification
-→ Parse AI answer
-→ Switch
-├── urgent → Google Sheets → Telegram manager notification → success response
-├── today → Google Sheets → email check → Gmail / success response
-└── later → Google Sheets → success response
-```
-
-### Что показывает проект
-
-- AI-классификацию срочности сервисных заявок;
-- связку main workflow + sub-workflow;
-- обработку некорректного JSON-ответа модели;
-- маршрутизацию по срочности через Switch;
-- логирование валидных заявок и ошибок в Google Sheets;
-- разные сценарии коммуникации для клиента и менеджера.
-
----
-
-## 8. Barbershop Booking API
-
-**Папка:** [`08-barbershop-booking-api`](./08-barbershop-booking-api/)
-
-Модульная система онлайн-записи для барбершопа, построенная как набор связанных workflow. Основной API принимает запрос клиента, проверяет секрет, передаёт данные в отдельный validation sub-workflow, возвращает понятный HTTP-ответ и запускает уведомления. Критические сбои централизованно обрабатываются отдельным Error Handler.
-
-### Ключевая логика
-
-```text
-Webhook Booking API
-→ Secret check
-→ Execute Validation sub-workflow
-→ IF valid
-├── invalid → HTTP 400 response
-└── valid → booking processing → HTTP success response
-                              └── Notifications workflow
-
-Any critical workflow failure
-→ Barbershop Error Handler
-→ error normalization
-→ Telegram alert
-```
-
-### Архитектура проекта
-
-- **Barbershop Booking API** — принимает заявку и управляет основным сценарием;
-- **Barbershop Validation** — проверяет обязательные поля, телефон, дату и время;
-- **Barbershop Notifications** — отправляет администратору уведомление о новой записи;
-- **Barbershop Error Handler** — принимает критические ошибки из рабочих workflow и отправляет технический алерт.
-
-### Что показывает проект
-
-- декомпозицию одной бизнес-системы на несколько workflow;
-- использование Execute Sub-workflow для повторно используемой логики;
-- проверку секретного токена и входных данных до основной обработки;
-- корректные HTTP-ответы клиенту при успешном и ошибочном запросе;
-- retry-настройки только для нестабильных внешних интеграций;
-- централизованную обработку критических ошибок;
-- разделение бизнес-уведомлений и технических алертов;
-- production-мышление: валидацию, отказоустойчивость и наблюдаемость.
-
----
-
-## Остальные проекты
-
-В папке [`other-projects`](./other-projects/) лежат менее формализованные, но рабочие workflow:
-
-- RSS / news digest automation;
-- e-commerce order processing;
-- HR onboarding workflow;
-- financial monitoring;
-- AI content repurposing;
-- customer support routing;
-- Notion API automations.
-
----
-
-## Стек
-
-**Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
-**AI / LLM:** `Groq` · AI Agent · Simple Memory · RAG · Hugging Face Embeddings · structured JSON output · prompt engineering  
-**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API` · `Supabase` · `pgvector`  
-**Code:** `JavaScript` Code node · JSON parsing · data normalization  
-**Tools:** `Git` · `GitHub` · `Docker` · `VS Code` · `Postman`
-
----
-
-## Как запустить workflow
-
-1. Открой нужную папку проекта.
-2. Скачай JSON-файл или файлы workflow.
-3. В n8n выбери **Workflows → Import from File**.
-4. Подключи свои credentials:
-   - Groq API;
-   - Hugging Face API;
-   - Telegram Bot;
-   - Gmail;
-   - Google Sheets;
-   - Supabase;
-   - Bitrix24 webhook или другой CRM API, если проект этого требует.
-5. Замени demo-значения:
-   - email;
-   - Telegram chat_id;
-   - webhook URL;
-   - Google Sheets document ID;
-   - CRM endpoint.
-6. Запусти workflow в тестовом режиме.
-7. После проверки активируй workflow.
-
----
-
-## Безопасность
-
-В публичных версиях workflow должны быть удалены:
-
-- реальные API keys;
-- webhook tokens;
-- Telegram chat_id;
-- личные email;
-- реальные CRM endpoints;
-- credentials blocks;
-- персональные данные.
-
----
-
-## Контакты
-
-- Telegram: [@Andyyy_Randyyy](https://t.me/Andyyy_Randyyy)
-- GitHub: [Andy-randy](https://github.com/Andy-randy)
-
----
-
-## 🇬🇧 In English
-
-## Repository Structure
-
-```text
-n8n-portfolio/
-├── 01-ai-sales-assistant/
-├── 02-lead-funnel/
-├── 03-hh-parser/
-├── 04-rag-telegram-faq-bot/
-├── 05-competitor-price-&-offer-monitoring-system/
-├── 06-fitness-club-lead-capture/
-├── 07-ai-service-request-automation/
-├── 08-barbershop-booking-api/
-├── other-projects/
-└── README.md
-```
-
----
-
-## Featured Case Studies
-
-| # | Project | What it does | Stack |
-|---|---------|--------------|-------|
-| 1 | [AI Sales Assistant](./01-ai-sales-assistant/) | Talks to customers in Telegram, collects details, and helps confirm orders | `n8n` · `Groq` · `Telegram` · `Google Sheets` |
-| 2 | [Lead Funnel With LLM Classifier](./02-lead-funnel/) | Classifies leads as cold / warm / hot and routes them to different actions | `n8n` · `Groq` · `Webhook` · `Gmail` · `Telegram` · `Bitrix24` |
-| 3 | [Smart Vacancy Parser](./03-hh-parser/) | Gets vacancies through API, filters them, and scores them with an LLM | `n8n` · `Groq` · `HH.ru API` · `Telegram` |
-| 4 | [RAG Telegram FAQ Bot](./04-rag-telegram-faq-bot/) | Answers Telegram questions from a PDF knowledge base using Supabase Vector Store | `n8n` · `RAG` · `Supabase` · `Groq` · `Telegram` |
-| 5 | [Competitor Price Monitoring](./05-competitor-price-&-offer-monitoring-system/) | Collects competitor prices, compares them with history, and sends Telegram reports | `n8n` · `JavaScript` · `Google Sheets` · `Telegram` · `Groq` |
-| 6 | [Fitness Club Trial Workout Funnel](./06-fitness-club-lead-capture/) | Processes trial workout requests with validation, Sheets logging, Telegram alerts, and email confirmation | `n8n` · `Webhook` · `Google Sheets` · `Telegram` · `Gmail` |
-| 7 | [AI Service Request Automation](./07-ai-service-request-automation/) | Handles repair service requests, validates fields, and classifies urgency with AI | `n8n` · `Webhook` · `Groq` · `Google Sheets` · `Telegram` · `Gmail` |
-| 8 | [Barbershop Booking API](./08-barbershop-booking-api/) | Accepts and validates booking requests, separates logic into sub-workflows, and handles failures centrally | `n8n` · `Webhook API` · `JavaScript` · `Sub-workflows` · `Telegram` · `Error Workflow` |
-
----
-
-## 1. AI Sales Assistant
-
-**Folder:** [`01-ai-sales-assistant`](./01-ai-sales-assistant/)
-
-A Telegram AI assistant that guides a customer through the sales flow: answers questions, collects required data, and decides when the order can be confirmed.
-
-### Core Logic
-
-```text
-Telegram Trigger
-→ AI Agent + Simple Memory
-→ IF
-├── follow-up question to customer
-└── order confirmation → Google Sheets → Telegram manager notification
-```
-
-### What this project demonstrates
-
-- AI Agent usage in n8n;
-- Simple Memory;
-- dialog logic without hard-coded keyword rules;
-- structured data logging in Google Sheets;
-- manager notification.
-
----
-
-## 2. Lead Funnel With LLM Classifier
-
-**Folder:** [`02-lead-funnel`](./02-lead-funnel/)
-
-A workflow for automatic incoming lead processing. The system receives a lead through Webhook, analyzes it with an AI Agent, and routes it based on lead temperature.
-
-### Core Logic
-
-```text
-Webhook
-→ AI Agent
-→ Code node
-→ Switch
-├── cold lead → email + Google Sheets
-├── warm lead → email + Google Sheets
-├── hot lead → Telegram manager ping + Bitrix24 CRM
-└── fallback → Telegram error notification
-```
-
-### What this project demonstrates
-
-- AI-based lead classification;
-- JSON normalization through a Code node;
-- budget extraction from request text;
-- routing with Switch;
-- Bitrix24 REST API integration;
-- fallback handling for invalid AI output.
-
----
-
-## 3. Smart Vacancy Parser With LLM Scoring
-
-**Folder:** [`03-hh-parser`](./03-hh-parser/)
-
-A workflow for job search and initial vacancy scoring. It gets vacancies through the HH.ru API, normalizes the data, evaluates each vacancy with AI, and sends the result to Telegram.
-
-### Core Logic
-
-```text
-Manual / Schedule Trigger
-→ HH.ru API
-→ Code node
-→ Loop Over Items
-→ AI Agent
-→ IF
-→ Aggregate
-→ Telegram digest
-```
-
-### What this project demonstrates
-
-- external API usage;
-- array processing;
-- separation between AI evaluation and deterministic filtering;
-- digest generation with Aggregate + Code;
-- Telegram notifications.
-
----
-
-## 4. RAG Telegram FAQ Bot
-
-**Folder:** [`04-rag-telegram-faq-bot`](./04-rag-telegram-faq-bot/)
-
-A Telegram FAQ bot built with RAG: one workflow ingests PDF documents into Supabase Vector Store, and another receives user questions, retrieves relevant chunks, and answers through Groq.
-
-### Core Logic
-
-```text
-Google Drive PDF
-→ Extract From File
-→ Embeddings
-→ Supabase Vector Store
-
-Telegram Trigger
-→ AI Agent
-→ Supabase Vector Store Tool
-→ Groq Chat Model
-→ Telegram Response
-→ Google Sheets Logging
-```
-
-### What this project demonstrates
-
-- RAG architecture in n8n;
-- separate ingest/query workflows;
-- Supabase Vector Store and embeddings;
-- Telegram bot onboarding with `/start`;
-- question and answer logging in Google Sheets.
-
----
-
-## 5. Competitor Price & Offer Monitoring
-
-**Folder:** [`05-competitor-price-&-offer-monitoring-system`](./05-competitor-price-&-offer-monitoring-system/)
-
-A workflow for daily competitor price monitoring. It collects products from multiple e-commerce websites, normalizes prices, compares them with Google Sheets history, and sends reports and alerts to Telegram.
-
-### Core Logic
-
-```text
-Schedule Trigger
-→ Competitors list
-→ HTTP Request
-→ HTML / custom enrichment
-→ Prepare products
-├── daily Telegram report
-└── Google Sheets history → price comparison → AI analysis → Telegram alert
-```
-
-### What this project demonstrates
-
-- parsing multiple websites with different CSS selectors;
-- handling a website where prices are loaded through a separate JSON request;
-- product name and price normalization;
-- historical comparison in Google Sheets;
-- Telegram reports and alerts;
-- AI analysis of price changes.
-
----
-
-## 6. Fitness Club Trial Workout Funnel
-
-**Folder:** [`06-fitness-club-lead-capture`](./06-fitness-club-lead-capture/)
-
-A pair of n8n workflows for processing trial workout requests for a fitness club. The main workflow receives leads through a Webhook, checks a request secret, calls a validation sub-workflow, classifies leads by goal, saves valid requests to Google Sheets, notifies a manager in Telegram, and sends a Gmail confirmation when a valid email is provided.
-
-### Core Logic
-
-```text
-Webhook
-→ Code node
-→ Secret check
-→ Validation sub-workflow
-→ Google Sheets
-→ Telegram manager notification
-→ IF email valid
-├── Gmail confirmation
-└── success response
-```
-
-### What this project demonstrates
-
-- main workflow + sub-workflow architecture;
-- server-side validation before lead processing;
-- lead handling with and without email without duplicated branches;
-- separate Google Sheets error logging;
-- deterministic lead classification through a Code node.
-
----
-
-## 7. AI Service Request Automation
-
-**Folder:** [`07-ai-service-request-automation`](./07-ai-service-request-automation/)
-
-A pair of n8n workflows for processing home appliance repair service requests. The main workflow receives a request through a Webhook, checks a request secret, calls a validation sub-workflow, classifies request urgency with an AI Agent, saves the request to Google Sheets, notifies a manager in Telegram for urgent cases, and sends a Gmail confirmation to the customer.
-
-### Core Logic
-
-```text
-Webhook
-→ Secret check
-→ Validation sub-workflow
-→ AI Agent urgency classification
-→ Parse AI answer
-→ Switch
-├── urgent → Google Sheets → Telegram manager notification → success response
-├── today → Google Sheets → email check → Gmail / success response
-└── later → Google Sheets → success response
-```
-
-### What this project demonstrates
-
-- AI-based urgency classification for service requests;
-- main workflow + sub-workflow architecture;
-- invalid AI JSON response handling;
-- urgency-based routing through Switch;
-- valid request and error logging in Google Sheets;
-- separate communication scenarios for the customer and manager.
-
----
-
-## 8. Barbershop Booking API
-
-**Folder:** [`08-barbershop-booking-api`](./08-barbershop-booking-api/)
-
-A modular online booking system for a barbershop, implemented as a set of connected workflows. The main API receives a customer request, checks the secret, delegates validation to a dedicated sub-workflow, returns a clear HTTP response, and triggers notifications. Critical failures are handled centrally by a separate Error Handler.
-
-### Core Logic
-
-```text
-Webhook Booking API
-→ Secret check
-→ Execute Validation sub-workflow
-→ IF valid
-├── invalid → HTTP 400 response
-└── valid → booking processing → HTTP success response
-                              └── Notifications workflow
-
-Any critical workflow failure
-→ Barbershop Error Handler
-→ error normalization
-→ Telegram alert
-```
-
-### Project Architecture
-
-- **Barbershop Booking API** — receives requests and controls the main flow;
-- **Barbershop Validation** — validates required fields, phone number, date, and time;
-- **Barbershop Notifications** — sends new-booking notifications to the administrator;
-- **Barbershop Error Handler** — receives critical workflow failures and sends technical alerts.
-
-### What this project demonstrates
-
-- decomposition of one business system into multiple workflows;
-- reusable logic through Execute Sub-workflow;
-- secret-token and input validation before business processing;
-- correct HTTP responses for successful and invalid requests;
-- retry settings applied only to unstable external integrations;
-- centralized handling of critical failures;
-- separation of business notifications from technical alerts;
-- production-oriented validation, resilience, and observability.
-
----
-
-## Other Projects
-
-The [`other-projects`](./other-projects/) folder contains less formalized but working workflows:
-
-- RSS / news digest automation;
-- e-commerce order processing;
-- HR onboarding workflow;
-- financial monitoring;
-- AI content repurposing;
-- customer support routing;
-- Notion API automations.
-
----
-
-## Stack
-
-**Automation:** `n8n` · Webhook · Schedule Trigger · Telegram Trigger · IF · Switch · Loop · Aggregate  
-**AI / LLM:** `Groq` · AI Agent · Simple Memory · RAG · Hugging Face Embeddings · structured JSON output · prompt engineering  
-**Integrations:** `Telegram Bot API` · `Gmail` · `Google Sheets` · `Bitrix24 REST API` · `Notion API` · `HH.ru API` · `Supabase` · `pgvector`  
-**Code:** `JavaScript` Code node · JSON parsing · data normalization  
-**Tools:** `Git` · `GitHub` · `Docker` · `VS Code`
-
----
-
-## How to Run a Workflow
-
-1. Open the project folder.
-2. Download the workflow JSON file or files.
-3. In n8n, go to **Workflows → Import from File**.
-4. Connect your own credentials:
-   - Groq API;
-   - Hugging Face API;
-   - Telegram Bot;
-   - Gmail;
-   - Google Sheets;
-   - Supabase;
-   - Bitrix24 webhook or another CRM API if required by the project.
-5. Replace demo values:
-   - email;
-   - Telegram chat_id;
-   - webhook URL;
-   - Google Sheets document ID;
-   - CRM endpoint.
-6. Run the workflow in test mode.
-7. Activate it after testing.
-
----
-
-## Security
-
-Public workflow versions should not contain:
-
-- real API keys;
-- webhook tokens;
-- Telegram chat_id;
-- personal emails;
-- real CRM endpoints;
-- credentials blocks;
-- personal data.
-
----
-
-## Contacts
-
-- Telegram: [@Andyyy_Randyyy](https://t.me/Andyyy_Randyyy)
-- GitHub: [Andy-randy](https://github.com/Andy-randy)
+Все публичные workflow выключены и санитизированы. Перед использованием нужно вручную подключить credentials, заменить placeholders и повторить тесты в отдельном n8n workspace.

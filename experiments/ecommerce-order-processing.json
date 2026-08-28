@@ -1,0 +1,408 @@
+{
+  "name": "Ecommerce Order Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ecommerce-order",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "имя",
+              "value": "={{ $('Webhook').item.json.query['Имя'] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "email",
+              "value": "={{ $('Webhook').item.json.query.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "телефон",
+              "value": "={{ $('Webhook').item.json.query['Телефон'] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "товар",
+              "value": "={{ $('Webhook').item.json.query['Товар'] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "количество",
+              "value": "={{ $('Webhook').item.json.query['Количество'] }}",
+              "type": "string"
+            },
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "name": "адрес доставки",
+              "value": "={{ $('Webhook').item.json.query['Адрес доставки'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "REDACTED_INTERNAL_ID",
+              "leftValue": "={{ $('Get row(s) in sheet').item.json['количество'] }}",
+              "rightValue": "={{ $json['количество'] }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "имя": "={{ $json['имя'] }}",
+            "email": "={{ $json.email }}",
+            "телефон": "={{ $json['телефон'] }}",
+            "товар": "={{ $json['товар'] }}",
+            "количество": "={{ $json['количество'] }}",
+            "адрес доставки": "={{ $json['адрес доставки'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "имя",
+              "displayName": "имя",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "телефон",
+              "displayName": "телефон",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "товар",
+              "displayName": "товар",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "количество",
+              "displayName": "количество",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "адрес доставки",
+              "displayName": "адрес доставки",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_NOTIFICATION_EMAIL",
+        "subject": "Подтверждение заказа",
+        "message": "=<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>Подтверждение заказа</title>\n  </head>\n  <body style=\"margin:0; padding:0; background-color:#f4f4f4;\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f4f4f4; padding:20px 0;\">\n      <tr>\n        <td align=\"center\">\n          <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:Arial, sans-serif; color:#333333;\">\n            <!-- Шапка -->\n            <tr>\n              <td style=\"background-color:#111827; padding:20px 30px; text-align:center;\">\n                <h1 style=\"margin:0; font-size:22px; color:#ffffff;\">\n                  Спасибо за заказ в {{ $json[\"storeName\"] || \"Нашем магазине\" }}\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Приветствие -->\n            <tr>\n              <td style=\"padding:20px 30px 10px 30px;\">\n                <p style=\"margin:0 0 10px 0; font-size:16px;\">\n                  Здравствуйте, <strong>{{ $json['имя'] }}</strong>!\n                </p>\n                <p style=\"margin:0; font-size:14px; line-height:1.5;\">\n                  Мы получили ваш заказ и уже начали его обработку. Ниже — детали заказа.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Блок с номером и статусом -->\n            <tr>\n              <td style=\"padding:10px 30px 10px 30px;\">\n                <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;\">\n                  <tr>\n                    <td style=\"padding:10px 0; font-size:14px;\">\n                      <strong>Номер заказа:</strong> {{$json[\"orderId\"] || \"будет присвоен\"}}\n                    </td>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:5px 0; font-size:14px;\">\n                      <strong>Статус:</strong> Принят в обработку\n                    </td>\n                  </tr>\n                </table>\n              </td>\n            </tr>\n\n            <!-- Детали заказа -->\n            <tr>\n              <td style=\"padding:10px 30px 20px 30px;\">\n                <h2 style=\"margin:0 0 10px 0; font-size:18px; color:#111827;\">\n                  Детали заказа\n                </h2>\n                <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse; font-size:14px;\">\n                  <tr style=\"background-color:#f9fafb;\">\n                    <th align=\"left\" style=\"padding:8px 10px; border-bottom:1px solid #e5e7eb;\">Товар</th>\n                    <th align=\"left\" style=\"padding:8px 10px; border-bottom:1px solid #e5e7eb;\">Количество</th>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:8px 10px; border-bottom:1px solid #e5e7eb;\">\n                      {{ $json['товар'] }}\n                    </td>\n                    <td style=\"padding:8px 10px; border-bottom:1px solid #e5e7eb;\">\n                      {{ $json['количество'] }}\n                    </td>\n                  </tr>\n                </table>\n              </td>\n            </tr>\n\n            <!-- Доставка -->\n            <tr>\n              <td style=\"padding:0 30px 20px 30px;\">\n                <h2 style=\"margin:0 0 10px 0; font-size:16px; color:#111827;\">\n                  Адрес доставки\n                </h2>\n                <p style=\"margin:0; font-size:14px; line-height:1.5;\">\n                  {{ $json['адрес доставки'] }}\n                </p>\n              </td>\n            </tr>\n\n            <!-- Контакты -->\n            <tr>\n              <td style=\"padding:0 30px 20px 30px;\">\n                <h2 style=\"margin:0 0 10px 0; font-size:16px; color:#111827;\">\n                  Контактные данные\n                </h2>\n                <p style=\"margin:0; font-size:14px; line-height:1.5;\">\n                  Email: {{$json[\"email\"]}}<br />\n                  Телефон: {{ $json['телефон'] }}\n                </p>\n              </td>\n            </tr>\n\n            <!-- Низ письма -->\n            <tr>\n              <td style=\"padding:20px 30px 25px 30px; background-color:#f9fafb; font-size:12px; color:#6b7280; text-align:center;\">\n                Если вы не оформляли этот заказ, просто проигнорируйте это письмо или напишите нам в ответ.<br />\n                {{ $json[\"storeName\"] || \"Магазин\" }} • Служба поддержки\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "REDACTED_NODE_ID_4",
+      "name": "Send a message"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_NAME",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "товар",
+              "lookupValue": "={{ $json.query['Товар'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_5",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        -96
+      ],
+      "id": "REDACTED_NODE_ID_6",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_ENDPOINT",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"Заявка от {{ $('Webhook').item.json.query['Имя'] }}\",\n    \"COMMENTS\": \"Телефон: {{ $('Webhook').item.json.query['Телефон'] }} Email: {{ $('Webhook').item.json.query.Email }} Заявка: {{ $('Webhook').item.json.query['Интерес'] }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        -96
+      ],
+      "id": "REDACTED_NODE_ID_7",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        96
+      ],
+      "id": "REDACTED_NODE_ID_8",
+      "name": "Send a message1"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        96
+      ],
+      "id": "REDACTED_NODE_ID_9",
+      "name": "Send a text message1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "tags": []
+}

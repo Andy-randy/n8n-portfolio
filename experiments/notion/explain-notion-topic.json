@@ -1,0 +1,140 @@
+{
+  "name": "Explain a Notion Topic",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "notion-explain-topic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_0",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_LLM_ENDPOINT",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Объясни тему '{{ $json.query.topic }}' из курса n8n простым языком, как ребёнку. Дай краткое объяснение на 3-5 предложений на русском языке.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $json.notion_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_TOKEN"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=application/json",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_2",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $('HTTP Request').item.json.choices[0].message.content\n  .replace(/\\\\/g, '')\n  .replace(/\"/g, '\\\\\"')\n  .replace(/\\n/g, ' ')\n  .replace(/\\r/g, '')\n  .slice(0, 2000);\n\nconst pageId = $('Webhook').item.json.query.page_id;\nconst notionUrl = `https://api.notion.com/v1/pages/${pageId}`;\nconst body = `{\"properties\":{\"Объяснение от Claude\":{\"rich_text\":[{\"text\":{\"content\":\"${content}\"}}]}}}`;\n\nreturn [{ json: { explanation: content, body: body, page_id: pageId, notion_url: notionUrl } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "REDACTED_NODE_ID_3",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}

@@ -1,421 +1,131 @@
 # AI Lead Processing Pipeline
 
-![Architecture](./screenshots/architecture.png) ![Architecture2](./screenshots/architecture2.png) ![Architecture3](./screenshots/architecture3.png) ![Architecture4](./screenshots/architecture4.png)
+A webhook-driven n8n pipeline that validates inbound leads, classifies intent with an LLM, routes by lead temperature, and triggers channel-specific follow-up.
 
-## Description
+[Workflow export](./workflows/ai-lead-processing-pipeline.json) · [Sample input](./examples/sample-input.json) · [Sample output](./examples/sample-output.json) · [Test scenarios](./tests/TEST_CASES.md)
 
-Production-oriented n8n workflow for automated lead qualification and routing.
+> Scope: portfolio demonstration. The workflow shows explicit validation, AI-output parsing, deterministic routing, and separate webhook responses; it is not a complete CRM transaction layer.
 
-The workflow receives incoming leads through a Webhook, validates input data, classifies requests with AI, extracts budget values from natural language, and routes leads through different processing scenarios depending on lead temperature.
+## Business problem
 
-The project demonstrates production-ready workflow architecture with validation, AI fallback handling, structured parsing, CRM integration, notifications, and explicit webhook responses.
+Sales teams receive leads with different levels of intent and incomplete data. Manual triage delays hot opportunities, while sending every contact through the same sequence wastes manager time and creates an inconsistent customer experience.
 
----
+The integration needs to reject malformed input, distinguish hot, warm, and cold leads, and make each downstream action visible and auditable.
 
-## Business Problem
+## Solution
 
-Sales managers often waste time manually reviewing incoming leads:
+An n8n webhook receives lead data through query parameters. A Code node validates the required fields and normalizes the budget before an AI Agent classifies the lead. A second Code node parses the model response into a controlled structure.
 
-- who is ready to buy now;
-- who needs additional information;
-- who is only exploring;
-- which request should be prioritized first.
-
-This workflow automates initial lead qualification and helps teams react faster to high-priority customers.
-
----
-
-## Features
-
-- receives leads through Webhook;
-- validates:
-  - name;
-  - email;
-  - phone;
-  - request;
-  - webhook secret;
-- rejects invalid requests before AI processing;
-- classifies leads with AI Agent;
-- uses deterministic AI settings (`temperature: 0`);
-- parses and validates AI JSON output;
-- normalizes AI responses (`теплый` → `тёплый`);
-- extracts budgets from natural language:
-  - `50к`
-  - `50 тыс`
-  - `1.5 млн`
-- routes leads through Switch:
-  - hot;
-  - warm;
-  - cold;
-  - fallback;
-- sends Telegram notifications for hot leads;
-- creates CRM deals through Bitrix24 REST API;
-- sends email follow-ups;
-- logs leads to Google Sheets;
-- handles AI failures safely through fallback routes;
-- returns explicit Webhook responses:
-  - `200`
-  - `400`
-  - `500`
-
----
-
-## Tech Stack
-
-- n8n
-- Webhook
-- AI Agent
-- Groq Chat Model
-- JavaScript Code nodes
-- IF / Switch
-- Telegram
-- Gmail
-- Google Sheets
-- Bitrix24 REST API
-
----
+A deterministic Switch routes the result. Hot leads notify a manager and create a CRM deal; warm leads receive an email and are logged; cold leads receive a different email and are logged. Every route returns its own HTTP response, including validation and AI-failure paths.
 
 ## Architecture
 
-```text
-Webhook
-→ Validate Lead Input
-→ AI Classification
-→ Parse & Normalize AI Output
-→ Route by Temperature
-
-Cold lead
-→ Email
-→ Google Sheets
-→ Response 200
-
-Warm lead
-→ Email
-→ Google Sheets
-→ Response 200
-
-Hot lead
-→ Telegram notification
-→ Budget check
-→ CRM Deal
-→ Response 200
-
-AI fallback
-→ Admin Telegram Alert
-→ Response 500
-
-Invalid input
-→ Response 400
+```mermaid
+flowchart LR
+    Client[Lead source] --> Hook[Webhook]
+    Hook --> Validate[Validate and normalize]
+    Validate --> Valid{Valid input?}
+    Valid -->|No| R400[Validation response]
+    Valid -->|Yes| Agent[LLM classification]
+    Agent --> Parse[Parse controlled output]
+    Parse --> Parsed{Classification valid?}
+    Parsed -->|No| Alert[Admin alert]
+    Alert --> RAI[AI failure response]
+    Parsed -->|Yes| Route{Hot / warm / cold}
+    Route --> Hot[Manager alert + CRM deal]
+    Route --> Warm[Email + Sheets log]
+    Route --> Cold[Email + Sheets log]
+    Hot --> RH[Hot response]
+    Warm --> RW[Warm response]
+    Cold --> RC[Cold response]
 ```
 
----
+## Workflow screenshots / Output evidence
 
-## Example Input
+![AI lead pipeline workflow](./screenshots/workflow-overview.png)
 
-```json
-{
-  "name": "Anton",
-  "email": "anton@example.com",
-  "phone": "+79990000000",
-  "request": "Need automation for clothing business, budget 50k",
-  "secret": "DEMO_SECRET_REPLACE_ME"
-}
-```
+| Evidence | Preview |
+| --- | --- |
+| Hot-lead response | [Open image](./screenshots/hot-lead-response.png) |
+| Validation error | [Open image](./screenshots/validation-error-response.png) |
+| AI failure | [Open image](./screenshots/ai-failure-response.png) |
 
----
+Synthetic contract examples: [`sample-input.json`](./examples/sample-input.json) and [`sample-output.json`](./examples/sample-output.json).
 
-## Example Output
+## Key engineering decisions
 
-```json
-{
-  "name": "Anton",
-  "email": "anton@example.com",
-  "phone": "+79990000000",
-  "budget": 50000,
-  "temperature": "горячий",
-  "reason": "Client specified a clear task and budget.",
-  "next_action": "Send the lead to the manager immediately"
-}
-```
+- Input validation runs before the paid and probabilistic AI step.
+- AI performs semantic lead assessment; a Switch node owns deterministic routing.
+- The model result is parsed in code rather than passed directly to CRM, email, or Sheets nodes.
+- Hot leads have a separate budget branch, so missing budget is visible in both behavior and response.
+- Each terminal branch responds explicitly to the original webhook request.
 
----
+## Input and output contract
 
-## Production-Oriented Logic
+**Trigger:** HTTP webhook using query parameters.
 
-The workflow includes several production-focused patterns:
+**Required input:** `name`, `email`, `phone`, `request`, and `secret`. Budget is parsed when present and affects the hot-lead route.
 
-- strict input validation before AI;
-- webhook secret protection;
-- deterministic AI classification;
-- strict AI JSON parsing;
-- normalization of AI output;
-- fallback routing for invalid AI responses;
-- separate CRM logic for leads with and without budget;
-- explicit webhook responses for all routes;
-- safe public export without real credentials.
+**Controlled AI output:** lead `temperature`, classification `reason`, and recommended `next_action`.
 
----
+**Business outputs:** CRM request for hot leads, Telegram manager alert, Gmail follow-up, Google Sheets log for warm or cold leads, and a route-specific HTTP response.
 
-## Security
+## Failure handling
 
-The public version does not include:
+- An invalid shared secret is rejected before processing.
+- Missing or malformed lead fields return a validation response instead of reaching the model.
+- Invalid AI output triggers an administrator notification and a dedicated failure response.
+- Integration errors remain visible in n8n execution history.
+- The current workflow has no compensating action if one side effect succeeds and a later one fails.
 
-- real API keys;
-- Telegram chat IDs;
-- Webhook URLs;
-- CRM credentials;
-- Google Sheets IDs;
-- personal data.
-
-Before running the workflow, replace:
-
-- `REDACTED_WEBHOOK_PATH`
-- `REDACTED_EXTERNAL_URL`
-- `TELEGRAM_CHAT_ID_PLACEHOLDER`
-- demo secret value `DEMO_SECRET_REPLACE_ME`
-- n8n credentials
-
----
-
-## How to Run
-
-1. Import the workflow JSON into n8n.
-2. Add credentials for:
-   - Groq
-   - Telegram
-   - Gmail
-   - Google Sheets
-   - Bitrix24
-3. Replace demo placeholders.
-4. Send test requests through Postman or Webhook test URL.
-5. Test all scenarios:
-   - invalid input;
-   - hot lead;
-   - warm lead;
-   - cold lead;
-   - AI fallback.
-6. Activate the workflow.
-
----
-
-## Possible Improvements
-
-- move secret to environment variables;
-- add Error Workflow;
-- add retry logic;
-- add UTM tracking;
-- add deduplication by email or phone;
-- add lead scoring;
-- add analytics dashboard;
-- store leads in Supabase or PostgreSQL.
-
----
-
-# Русская версия
-
-## Описание
-
-Production-oriented workflow на n8n для автоматической квалификации и маршрутизации лидов.
-
-Workflow принимает заявки через Webhook, валидирует входные данные, классифицирует заявки через AI, извлекает бюджет из обычного текста и направляет лидов по разным сценариям обработки в зависимости от температуры заявки.
-
-Проект демонстрирует production-подход к построению workflow: validation, fallback-обработка AI, structured parsing, CRM-интеграция, уведомления и явные webhook responses.
-
----
-
-## Бизнес-задача
-
-Менеджеры по продажам часто тратят время на ручной разбор входящих заявок:
-
-- кто готов купить прямо сейчас;
-- кому нужна дополнительная информация;
-- кто просто интересуется;
-- какую заявку нужно обработать в первую очередь.
-
-Workflow автоматизирует первичную квалификацию лидов и помогает быстрее реагировать на приоритетных клиентов.
-
----
-
-## Возможности workflow
-
-- принимает заявки через Webhook;
-- валидирует:
-  - имя;
-  - email;
-  - телефон;
-  - текст заявки;
-  - webhook secret;
-- отклоняет невалидные запросы до AI;
-- классифицирует лидов через AI Agent;
-- использует deterministic AI settings (`temperature: 0`);
-- парсит и проверяет AI JSON;
-- нормализует AI-ответы (`теплый` → `тёплый`);
-- извлекает бюджет из текста:
-  - `50к`
-  - `50 тыс`
-  - `1.5 млн`
-- маршрутизирует лидов через Switch:
-  - горячий;
-  - тёплый;
-  - холодный;
-  - fallback;
-- отправляет уведомления в Telegram;
-- создаёт сделки в CRM через Bitrix24 REST API;
-- отправляет email-письма;
-- записывает лидов в Google Sheets;
-- безопасно обрабатывает AI-ошибки через fallback-ветку;
-- возвращает явные webhook responses:
-  - `200`
-  - `400`
-  - `500`
-
----
-
-## Стек
-
-- n8n
-- Webhook
-- AI Agent
-- Groq Chat Model
-- JavaScript Code nodes
-- IF / Switch
-- Telegram
-- Gmail
-- Google Sheets
-- Bitrix24 REST API
-
----
-
-## Архитектура
+## Repository structure
 
 ```text
-Webhook
-→ Validate Lead Input
-→ AI Classification
-→ Parse & Normalize AI Output
-→ Route by Temperature
-
-Cold lead
-→ Email
-→ Google Sheets
-→ Response 200
-
-Warm lead
-→ Email
-→ Google Sheets
-→ Response 200
-
-Hot lead
-→ Telegram notification
-→ Budget check
-→ CRM Deal
-→ Response 200
-
-AI fallback
-→ Admin Telegram Alert
-→ Response 500
-
-Invalid input
-→ Response 400
+02-lead-funnel/
+├── README.md
+├── workflows/ai-lead-processing-pipeline.json
+├── screenshots/
+├── examples/
+└── tests/TEST_CASES.md
 ```
 
----
+## Setup
 
-## Пример входящих данных
+1. Import [`ai-lead-processing-pipeline.json`](./workflows/ai-lead-processing-pipeline.json).
+2. Configure Groq, Telegram, Gmail, Google Sheets, and CRM HTTP credentials in n8n.
+3. Replace `YOUR_API_SECRET`, `YOUR_CRM_ENDPOINT`, `YOUR_TELEGRAM_CHAT_ID`, and `YOUR_GOOGLE_SHEET_ID`.
+4. Select the warm/cold target sheets, confirm the public webhook response mode, and map CRM and sheet fields.
+5. Run the documented manual tests before activating the workflow.
 
-```json
-{
-  "name": "Антон",
-  "email": "anton@example.com",
-  "phone": "+79990000000",
-  "request": "Нужна автоматизация для магазина одежды, бюджет 50к",
-  "secret": "DEMO_SECRET_REPLACE_ME"
-}
-```
+## Test scenarios
 
----
+The scenario set covers invalid authentication, missing fields, all three lead temperatures, hot leads with and without budget, malformed AI output, and downstream integration failures. See [`tests/TEST_CASES.md`](./tests/TEST_CASES.md).
 
-## Пример результата
+## Known limitations
 
-```json
-{
-  "name": "Антон",
-  "email": "anton@example.com",
-  "phone": "+79990000000",
-  "budget": 50000,
-  "temperature": "горячий",
-  "reason": "Клиент указал конкретную задачу и бюджет.",
-  "next_action": "Передать заявку менеджеру"
-}
-```
+- The shared secret arrives as a query parameter and should be replaced by stronger authentication in production.
+- Classification is probabilistic and has no evaluation dataset or monitored quality threshold.
+- The pipeline has no idempotency key, duplicate protection, or transactional outbox.
+- CRM, email, Sheets, and Telegram side effects are not atomic.
+- Personal-data retention and deletion policies are outside this demonstration.
 
----
+## Production hardening path
 
-## Production-подход
+- accept a versioned JSON body and authenticate with signed requests or an API gateway;
+- validate the model response against a strict schema and add classification evals;
+- introduce an idempotency key and unique persistence constraint;
+- decouple delivery through a queue or transactional outbox with retries;
+- redact personal data in logs and define retention controls;
+- add centralized error handling, metrics, and operator alerts.
 
-Workflow использует production-oriented практики:
+## Tech stack
 
-- строгая validation до AI;
-- защита webhook через secret;
-- deterministic AI classification;
-- строгий parsing AI JSON;
-- нормализация AI-ответов;
-- fallback-ветки для AI ошибок;
-- отдельная логика CRM для лидов с бюджетом и без;
-- явные webhook responses для всех веток;
-- безопасный публичный экспорт без credentials.
+`n8n` · `Groq` · `Webhook API` · `Telegram Bot API` · `Gmail` · `Google Sheets` · `CRM REST API`
 
 ---
 
-## Безопасность
+## Русская версия
 
-Публичная версия workflow не содержит:
+Проект принимает лид через webhook, проверяет входные данные, использует LLM для смысловой классификации и затем детерминированно разводит результат по веткам «горячий», «тёплый» и «холодный». Действия отличаются: уведомление менеджера и CRM для горячего лида, письма и журналирование для остальных.
 
-- реальные API keys;
-- Telegram chat IDs;
-- webhook URLs;
-- CRM credentials;
-- Google Sheets IDs;
-- персональные данные.
-
-Перед запуском замените:
-
-- `REDACTED_WEBHOOK_PATH`
-- `REDACTED_EXTERNAL_URL`
-- `TELEGRAM_CHAT_ID_PLACEHOLDER`
-- demo secret value `DEMO_SECRET_REPLACE_ME`
-- n8n credentials
-
----
-
-## Как запустить
-
-1. Импортировать workflow JSON в n8n.
-2. Подключить credentials:
-   - Groq
-   - Telegram
-   - Gmail
-   - Google Sheets
-   - Bitrix24
-3. Заменить demo placeholders.
-4. Отправить тестовые запросы через Postman или Webhook test URL.
-5. Проверить все сценарии:
-   - invalid input;
-   - hot lead;
-   - warm lead;
-   - cold lead;
-   - AI fallback.
-6. Активировать workflow.
-
----
-
-## Возможные улучшения
-
-- вынести secret в environment variables;
-- добавить Error Workflow;
-- добавить retry logic;
-- добавить UTM tracking;
-- добавить deduplication по email или телефону;
-- добавить lead scoring;
-- добавить analytics dashboard;
-- хранить лидов в Supabase или PostgreSQL.
+Инженерная ценность здесь не в одном AI Agent, а в границах вокруг него: ранняя валидация, отдельный парсер ответа модели, явные ветки ошибок и контролируемые HTTP-ответы. Для production нужны идемпотентность, более сильная аутентификация и надёжная доставка побочных эффектов.
