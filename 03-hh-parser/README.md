@@ -1,159 +1,125 @@
-# 🔍 Умный парсер вакансий с LLM-скорингом
+# Smart Vacancy Parser with LLM Scoring
 
-[🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
+An n8n workflow that retrieves vacancies, normalizes job data, scores semantic fit with an LLM, and delivers separate Telegram digests for strong matches and manual review.
 
-![Architecture](./screenshots/architecture.png)
+[Workflow export](./workflows/smart-vacancy-parser.json) · [Normalized vacancy](./examples/normalized-vacancy.json) · [AI score contract](./examples/score-output.json) · [Test scenarios](./tests/TEST_CASES.md)
+
+> Scope: manually triggered portfolio workflow. It demonstrates normalization and guarded use of AI scoring, not a continuous job-search crawler.
+
+## Business problem
+
+Keyword-only job alerts generate noisy results. Titles vary, responsibilities are phrased differently, and a role can be relevant even when it does not contain every expected term.
+
+A useful shortlist needs both deterministic filters—such as salary and work format—and a semantic assessment that remains inspectable rather than silently deciding on behalf of the user.
+
+## Solution
+
+The workflow calls the HeadHunter API, normalizes vacancy fields in JavaScript, and processes items in a loop. An AI Agent returns strict JSON with a numeric score, verdict, strengths, risks, and summary. A dedicated parser validates that contract and falls back to manual review when output is invalid.
+
+The final IF combines three conditions: minimum salary, remote work format, and AI score. Strong matches and review candidates are aggregated into separate Telegram digests.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Manual[Manual trigger] --> API[Vacancy API]
+    API --> Normalize[Normalize fields]
+    Normalize --> Loop[Process each vacancy]
+    Loop --> Agent[LLM fit assessment]
+    Agent --> Parse[Validate score contract]
+    Parse --> Gate{Salary + remote + score}
+    Gate -->|Match| Strong[Strong-match item]
+    Gate -->|Review| Review[Manual-review item]
+    Strong --> A1[Aggregate]
+    Review --> A2[Aggregate]
+    A1 --> T1[Telegram digest]
+    A2 --> T2[Telegram digest]
+```
+
+## Workflow screenshots / Output evidence
+
+![Smart vacancy parser workflow](./screenshots/workflow-overview.jpg)
+
+Synthetic outputs: [`normalized-vacancy.json`](./examples/normalized-vacancy.json) and [`score-output.json`](./examples/score-output.json).
+
+## Key engineering decisions
+
+- API payloads are normalized before entering prompts or route conditions.
+- The model must return a bounded `0–100` score plus evidence-oriented fields.
+- A Code node parses and validates the AI response before the score affects routing.
+- Invalid model output becomes a visible manual-review result with score `0`.
+- Final acceptance combines deterministic constraints with semantic scoring; AI is not the only gate.
+- Separate digests keep strong matches distinct from uncertain or rejected items.
+
+## Input and output contract
+
+**Trigger:** manual n8n execution.
+
+**Source input:** HeadHunter API vacancy records requested with `text=n8n автоматизация`, `area=113`, `per_page=10`, `salary=100000`, and `only_with_salary=true` in the public export. These are reviewable configuration values, not universal defaults.
+
+**Normalized fields:** title, company, salary, currency, work format, requirements, responsibilities, and URL.
+
+**AI output:** `score`, `verdict`, `strengths`, `risks`, and `summary` as strict JSON.
+
+**Business output:** one Telegram digest for strong matches and one digest for vacancies requiring review.
+
+## Failure handling
+
+- Missing source fields receive safe normalized defaults.
+- Invalid JSON, a non-numeric score, or a score outside `0–100` is converted to a manual-review result.
+- Empty aggregates produce an explicit no-results message instead of malformed Telegram content.
+- API, model, and Telegram transport errors remain visible in n8n execution history.
+- There is no checkpoint that resumes a partially processed API page after failure.
+
+## Repository structure
+
+```text
+03-hh-parser/
+├── README.md
+├── workflows/smart-vacancy-parser.json
+├── screenshots/workflow-overview.jpg
+├── examples/
+└── tests/TEST_CASES.md
+```
+
+## Setup
+
+1. Import [`smart-vacancy-parser.json`](./workflows/smart-vacancy-parser.json).
+2. Configure Groq and Telegram credentials in n8n.
+3. Replace `YOUR_TELEGRAM_CHAT_ID` and review the HeadHunter API query parameters.
+4. Adjust the minimum salary, remote-work value, and AI-score threshold to the target role.
+5. Run the test scenarios with synthetic fixtures before processing live vacancy data.
+
+## Test scenarios
+
+The manual checks cover a strong match, low salary, non-remote work, low semantic score, malformed AI JSON, missing vacancy fields, an empty API result, and integration failures. See [`tests/TEST_CASES.md`](./tests/TEST_CASES.md).
+
+## Known limitations
+
+- Execution is manual and processes only the configured API response; pagination is not implemented.
+- API rate limits and `429` responses have no dedicated backoff policy.
+- There is no durable checkpoint, vacancy deduplication, or history of score changes.
+- Fit scores depend on the prompt and model and have no labeled evaluation set.
+- Salary filtering does not fully normalize every currency or salary-range edge case.
+- Telegram is the only presentation layer.
+
+## Production hardening path
+
+- add scheduled execution, pagination, rate-limit handling, and durable checkpoints;
+- persist vacancy IDs and prevent duplicate notifications;
+- normalize currencies and salary ranges explicitly;
+- version the scoring rubric and evaluate it against labeled examples;
+- add retry policies, centralized error handling, and observability;
+- expose review decisions so they can improve future scoring.
+
+## Tech stack
+
+`n8n` · `HeadHunter API` · `Groq` · `JavaScript` · `Telegram Bot API`
 
 ---
 
-## 🇷🇺 По-русски
+## Русская версия
 
-### Контекст
+Workflow получает вакансии, приводит разнородные поля к единому контракту и запрашивает у LLM структурированную оценку соответствия. Итоговый маршрут зависит не только от модели: одновременно проверяются зарплата, удалённый формат и порог AI-score.
 
-Поиск работы через ленту HH.ru быстро превращается в ручную фильтрацию десятков постов в день: открыть, пробежать глазами, закрыть, повторить. Фильтры самого HH дают слишком широкую выборку — по тегу «automation engineer» всё равно приходит много нерелевантных позиций, где стек пересекается только на 20%. Нужен инструмент, который оставляет вакансии, подходящие и по содержанию, и по формальным требованиям.
-
-### Система
-
-```
-Manual Trigger
-   ↓
-HTTP Request → GET api.hh.ru/vacancies
-   ↓
-Code in JavaScript (нормализация полей)
-   ↓
-Loop Over Items
-   ↓
-AI Agent (Groq) — оценка по промпту под навыки
-   ↓
-      IF (зарплата ≥ 100k AND формат = удалёнка)
-     ↙ ↘
-  true   false
-   ↓      ↓
-Edit Fields    Edit Fields1
-   ↓             ↓
-Aggregate    Aggregate1
-   ↓             ↓
-Code         Code1
-   ↓             ↓
-Telegram (подходящие)    Telegram (остальные)
-```
-
-1. **Manual Trigger** — запуск вручную, когда нужно свежий дайджест.
-2. **HTTP Request** — GET к `api.hh.ru/vacancies` с параметрами поиска (ключевые слова, регион, опыт).
-3. **Code in JavaScript** — нормализация ответа HH.ru: извлечение зарплаты (она приходит в разных форматах: `from`/`to`, валюта, «не указана»), формата работы, описания.
-4. **Loop Over Items** — перебор вакансий по одной, чтобы LLM работала с каждой отдельно (а не пыталась разобрать массив из 50 объектов).
-5. **AI Agent на Groq** — фиксированный промпт с критериями под конкретные навыки. Читает название и описание, возвращает решение.
-6. **IF** — жёсткие критерии: зарплата ≥ 100k AND формат = «Удаленная работа».
-7. **Две параллельные ветки** — подходящие и остальные. Каждая проходит через Edit Fields (подготовка текста), Aggregate (сборка в один список), Code (форматирование) и улетает в Telegram двумя сообщениями.
-
-### Что интересно
-
-**Чистое разделение ответственности между LLM и детерминированной логикой.**
-- Groq отвечает за содержательную оценку — соответствуют ли описанные требования моим навыкам, какой общий уклон вакансии, стоит ли вообще рассматривать.
-- IF отвечает за объективные числовые критерии — зарплата и формат работы.
-
-LLM **не занимается тем, в чём она слабее всего** — сравнением чисел и точным равенством. Этот split — одно из самых полезных архитектурных решений, которые я сделала в портфолио. Если всё отдать LLM, она периодически будет пропускать вакансии с зарплатой 95k «потому что почти подходит», а детерминированная логика этого не допустит.
-
-**Две ветки вместо одной.** «Остальные» вакансии не теряются — они тоже уходят в Telegram, отдельным сообщением. Так я могу проверить, не отсекает ли фильтр что-то важное (например, вакансию с недоуказанной зарплатой, которая по содержанию идеальна).
-
-**Реальное использование.** Этим парсером я сама отсматривала вакансии при поиске работы и на его выдаче определила лучший fit для себя. Это тот редкий случай, когда учебный проект прошёл проверку настоящей задачей.
-
-### Стек
-
-- `n8n` — оркестратор
-- `Groq` — LLM для оценки
-- `HH.ru API` — источник данных
-- `Telegram Bot API` — канал доставки дайджеста
-- JavaScript — нормализация и форматирование
-
-### Credentials, которые нужно настроить
-
-- Groq API key
-- Telegram Bot с `chat_id` получателя дайджеста
-- HH.ru API — ключ не нужен для публичного поиска вакансий
-
-### Как запустить
-
-1. `Workflows → Import from File` → [`workflow.json`](./workflow.json).
-2. Настроить Groq и Telegram credentials.
-3. В HTTP Request: поменять параметры запроса под свои критерии (ключевые слова, регион, опыт).
-4. В AI Agent: переписать промпт под свой стек (сейчас там промпт под мои навыки).
-5. В IF: поменять пороги — зарплату и формат.
-6. Execute Workflow → получить два сообщения в Telegram.
-
----
-
-## 🇬🇧 In English
-
-### Context
-
-Job hunting through the HH.ru feed quickly turns into manually filtering dozens of postings a day: open, skim, close, repeat. HH's own filters cast too wide a net — even the "automation engineer" tag returns plenty of positions where the stack overlap is maybe 20%. You need a tool that keeps only vacancies matching both the content and the hard requirements.
-
-### System
-
-```
-Manual Trigger
-   ↓
-HTTP Request → GET api.hh.ru/vacancies
-   ↓
-Code in JavaScript (field normalisation)
-   ↓
-Loop Over Items
-   ↓
-AI Agent (Groq) — skills-matched prompt
-   ↓
-      IF (salary ≥ 100k AND format = remote)
-     ↙ ↘
-  true   false
-   ↓      ↓
-Edit Fields    Edit Fields1
-   ↓             ↓
-Aggregate    Aggregate1
-   ↓             ↓
-Code         Code1
-   ↓             ↓
-Telegram (matches)    Telegram (rest)
-```
-
-1. **Manual Trigger** — run on demand when a fresh digest is needed.
-2. **HTTP Request** — GET to `api.hh.ru/vacancies` with search parameters (keywords, region, experience).
-3. **Code in JavaScript** — normalises the HH.ru response: extracts salary (which arrives in multiple formats: `from`/`to`, currency, "not specified"), work format, description.
-4. **Loop Over Items** — iterate one vacancy at a time so the LLM works on each individually (not on a 50-object array).
-5. **AI Agent on Groq** — a fixed prompt with skill criteria. Reads the title and description, returns a decision.
-6. **IF** — hard criteria: salary ≥ 100k AND format = "remote".
-7. **Two parallel branches** — matches and the rest. Each goes through Edit Fields (text prep), Aggregate (assemble into one list), Code (formatting), and out to Telegram as two separate messages.
-
-### What's interesting
-
-**A clean split of responsibilities between the LLM and deterministic logic.**
-- Groq handles substantive assessment — do the stated requirements match my skills, what's the overall slant of the role, is it worth considering at all.
-- The IF handles objective numeric criteria — salary and work format.
-
-The LLM **doesn't do what it's weakest at** — comparing numbers and exact equality. This split is one of the most useful architectural choices in this portfolio. Hand everything to an LLM and it will sometimes let a 95k salary through "because it's almost there"; deterministic logic won't.
-
-**Two branches, not one.** "The rest" aren't dropped — they also go to Telegram as a separate message. That way I can check whether the filter is cutting off something important (e.g. a vacancy with an unstated salary that's ideal content-wise).
-
-**Real usage.** I used this parser myself during my own job search and picked my best-fit role from its output. A rare case where a study project passed the test of a real task.
-
-### Stack
-
-- `n8n` — orchestrator
-- `Groq` — evaluation LLM
-- `HH.ru API` — data source
-- `Telegram Bot API` — digest delivery channel
-- JavaScript — normalisation and formatting
-
-### Credentials to configure
-
-- Groq API key
-- Telegram Bot with the recipient `chat_id`
-- HH.ru API — no key needed for public vacancy search
-
-### How to run
-
-1. `Workflows → Import from File` → [`workflow.json`](./workflow.json).
-2. Configure Groq and Telegram credentials.
-3. In the HTTP Request: change the query parameters to your criteria (keywords, region, experience).
-4. In the AI Agent: rewrite the prompt for your stack (it's currently tuned to my skills).
-5. In the IF: change the thresholds — salary and format.
-6. Execute Workflow → receive two Telegram messages.
+Ответ модели теперь действительно используется и валидируется. Если JSON повреждён или score некорректен, вакансия не теряется и не проходит как подходящая — она попадает в ручную проверку. Для production остаются пагинация, дедупликация, чекпоинты и измеримая оценка качества модели.

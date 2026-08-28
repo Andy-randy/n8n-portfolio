@@ -1,143 +1,122 @@
-# 🤖 AI-ассистент, который сам закрывает заказы
+# AI Sales Assistant — Telegram Order Capture
 
-[🇷🇺 По-русски](#-по-русски) · [🇬🇧 In English](#-in-english)
+A conversational n8n workflow that collects booking details in Telegram, persists a structured order, and notifies a manager.
 
-![Architecture](./screenshots/architecture.png)
+[Workflow export](./workflows/ai-sales-assistant.json) · [Sample conversation](./examples/sample-conversation.md) · [Test scenarios](./tests/TEST_CASES.md)
+
+> Scope: portfolio demonstration. The workflow uses an LLM completion marker and in-memory conversation context; it is not a transactional order system.
+
+## Business problem
+
+Customers often provide booking details in an unpredictable order. A rigid question-by-question bot creates unnecessary friction, while an unconstrained chat model can confirm an incomplete request.
+
+The operator needs a structured order containing the customer, service, specialist, appointment time, phone, and email—not a raw chat transcript.
+
+## Solution
+
+The Telegram trigger starts an AI-assisted conversation. Simple Memory keeps a short context window per Telegram chat. The model asks for missing information and emits an exact `ЗАПИСЬ:` marker only when it believes the required fields are present.
+
+A deterministic IF node detects that marker. The completion branch extracts fields, appends a Google Sheets row, and sends a manager notification; otherwise the workflow continues the clarification loop.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    TG[Telegram message] --> Agent[AI Agent]
+    Model[Groq model] --> Agent
+    Memory[Simple Memory] --> Agent
+    Agent --> Reply[Reply to customer]
+    Reply --> Ready{Contains completion marker?}
+    Ready -->|No| FollowUp[Ask follow-up question]
+    Ready -->|Yes| Confirm[Confirm booking]
+    Confirm --> Parse[Extract structured fields]
+    Parse --> Sheets[(Google Sheets)]
+    Sheets --> Manager[Telegram manager alert]
+```
+
+## Workflow screenshots / Output evidence
+
+![AI Sales Assistant workflow overview](./screenshots/workflow-overview.png)
+
+Synthetic output: [`examples/structured-order.json`](./examples/structured-order.json).
+
+## Key engineering decisions
+
+- AI handles free-form conversation and semantic completeness assessment.
+- Routing remains deterministic: the IF node looks for one explicit completion marker.
+- Memory is keyed by Telegram chat ID and limited to ten messages, which bounds context size.
+- The public prompt contains configuration placeholders rather than a real address or service catalog.
+- Persistence occurs before the manager notification, so the order row is the primary side effect.
+
+## Input and output contract
+
+**Trigger:** Telegram text message.
+
+**Required business fields:** customer name, service, specialist, date/time, phone, and email.
+
+**Model completion contract:**
+
+```text
+ЗАПИСЬ: имя=xxx | услуга=xxx | мастер=xxx | дата=xxx | телефон=xxx | email=xxx
+```
+
+**Business output:** one Google Sheets row plus a Telegram manager notification.
+
+## Failure handling
+
+- Missing information stays on the clarification path.
+- Off-topic questions are restricted by the system prompt.
+- A malformed completion marker can break the current split expressions; this is documented as a limitation rather than hidden.
+- Google Sheets and Telegram errors remain visible in n8n execution history.
+- There is no centralized Error Workflow or compensating action in this demonstration.
+
+## Repository structure
+
+```text
+01-ai-sales-assistant/
+├── README.md
+├── workflows/ai-sales-assistant.json
+├── screenshots/workflow-overview.png
+├── examples/
+└── tests/TEST_CASES.md
+```
+
+## Setup
+
+1. Import [`ai-sales-assistant.json`](./workflows/ai-sales-assistant.json).
+2. Configure Telegram, Groq, and Google Sheets credentials in n8n.
+3. Replace `YOUR_BUSINESS_ADDRESS`, `YOUR_BUSINESS_HOURS`, `YOUR_SERVICE_CATALOG`, `YOUR_TELEGRAM_CHAT_ID`, and `YOUR_GOOGLE_SHEET_ID`.
+4. Map the target sheet columns to the structured fields.
+5. Run the manual scenarios before activating the workflow.
+
+## Test scenarios
+
+The manual coverage includes incomplete conversations, malformed model output, external integration failures, and session isolation. See [`tests/TEST_CASES.md`](./tests/TEST_CASES.md).
+
+## Known limitations
+
+- Simple Memory is not durable across every restart or long-lived customer journey.
+- Completion parsing depends on exact delimiters instead of a schema validator.
+- The workflow does not prevent duplicate orders or validate schedule availability.
+- A Sheets write followed by a failed Telegram alert is not rolled back.
+
+## Production hardening path
+
+- replace delimiter parsing with structured model output validation;
+- persist conversation state in Redis or PostgreSQL;
+- add an idempotency key and unique storage constraint;
+- validate service availability and permissions deterministically;
+- add centralized error handling, operator alerts, and redacted audit logs;
+- add contract and concurrency tests.
+
+## Tech stack
+
+`n8n` · `Telegram Bot API` · `Groq` · `Simple Memory` · `Google Sheets`
 
 ---
 
-## 🇷🇺 По-русски
+## Русская версия
 
-### Контекст
+Демонстрационный Telegram-ассистент ведёт свободный диалог, собирает параметры записи и переводит разговор в структурированную заявку. LLM отвечает за смысловую часть, а переход к сохранению выполняется детерминированно по явному маркеру.
 
-Владельцу бизнеса нужен бот, который ведёт клиента от первого сообщения до подтверждения заказа и **сам понимает, когда собрано достаточно данных**, чтобы оформить сделку. Без жёстких скриптов «спросить имя → спросить телефон → спросить адрес» — потому что реальные клиенты редко пишут в удобном порядке.
-
-### Система
-
-```
-Telegram Trigger
-      ↓
-   AI Agent (Groq + Simple Memory)
-      ↓
-   общение с клиентом
-      ↓
-      IF
-     ↙ ↘
-  true   false
-   ↓      ↓
-подтверждение    уточнения
-заказа
-   ↓
-Edit Fields
-   ↓
-Append row in sheet
-   ↓
-уведомление менеджеру
-```
-
-1. **Telegram Trigger** — ловит сообщение от клиента.
-2. **AI Agent на Groq с Simple Memory** — ведёт диалог, помнит контекст всей сессии. Отвечает клиенту и одновременно решает внутренне: «хватит ли мне данных, чтобы закрыть заказ?»
-3. **Сообщение клиенту** (узел «общение с клиентом») — отправляется всегда, независимо от того, закрывается ли заказ.
-4. **IF** — читает решение агента:
-   - Если агент сказал «пора подтверждать» → ветка `true`: клиенту уходит подтверждение заказа, Edit Fields структурирует данные, Append row in sheet пишет в Google Sheets, отдельное уведомление — менеджеру в Telegram.
-   - Если агент решил, что данных не хватает → ветка `false`: бот задаёт уточняющий вопрос (Edit Message Text).
-
-### Что интересно
-
-**Решение «разговор → подтверждение» принимает LLM, а не if-else на ключевых словах.** Сценарий не ломается на «нестандартных» клиентах, которые пишут свободным текстом. В отличие от ботов на шаблонных диалогах, тут клиент может написать «хочу два латте, завтра к 10 утра на адрес такой-то» — и бот поймёт, что данных достаточно, сразу оформит заказ, не задавая лишних вопросов.
-
-**Уведомление менеджеру — отдельный узел после записи в Sheets.** Если упадёт Telegram API менеджера — это не остановит подтверждение клиенту и запись заказа в базу. Клиентский путь защищён от проблем внутренней инфраструктуры.
-
-**Simple Memory, а не внешняя база.** Для bounded-сессии «один заказ — один диалог» этого достаточно. Усложнять имеет смысл, когда появится сценарий «вернуться к клиенту через неделю» — тогда надо уходить на Postgres/Redis.
-
-### Стек
-
-- `n8n` — оркестратор
-- `Groq` — LLM (llama-3.3-70b-versatile)
-- Simple Memory — in-memory контекст сессии
-- `Telegram Bot API` — канал общения с клиентом и менеджером
-- `Google Sheets` — база заказов
-
-### Credentials, которые нужно настроить
-
-- Telegram Bot (клиентский бот)
-- Telegram Bot (или тот же, с chat_id менеджера)
-- Groq API key
-- Google Sheets OAuth2
-
-### Как запустить
-
-1. `Workflows → Import from File` → выбрать [`workflow.json`](./workflow.json).
-2. Настроить credentials.
-3. В узле «уведомление менеджеру» поменять `chat_id` на свой.
-4. В узле «Append row in sheet» подключить свою таблицу.
-5. Activate.
-
----
-
-## 🇬🇧 In English
-
-### Context
-
-A business owner needs a bot that walks the customer from the first message to order confirmation and **figures out on its own when it has enough data** to close the deal. No rigid "ask name → ask phone → ask address" script, because real customers rarely volunteer information in a convenient order.
-
-### System
-
-```
-Telegram Trigger
-      ↓
-   AI Agent (Groq + Simple Memory)
-      ↓
-   chat with customer
-      ↓
-      IF
-     ↙ ↘
-  true   false
-   ↓      ↓
-order          follow-up
-confirmation   question
-   ↓
-Edit Fields
-   ↓
-Append row in sheet
-   ↓
-notify the manager
-```
-
-1. **Telegram Trigger** — picks up the customer's message.
-2. **AI Agent on Groq with Simple Memory** — runs the conversation, remembers the full session. Replies to the customer and internally decides: "do I have enough data to close this order?"
-3. **Reply to customer** (the "chat with customer" node) — sent unconditionally, regardless of whether the order is ready to close.
-4. **IF** — reads the agent's decision:
-   - Agent says "time to confirm" → `true` branch: the customer gets an order confirmation, Edit Fields normalises the data, Append row in sheet writes to Google Sheets, and a separate notification goes to the manager in Telegram.
-   - Agent decides there's not enough data → `false` branch: the bot asks a clarifying question (Edit Message Text).
-
-### What's interesting
-
-**The "chat → confirm" decision is made by the LLM, not by an if-else on keywords.** The flow doesn't break on non-standard customers who write in free form. Unlike template-driven bots, here the customer can say "two lattes, tomorrow 10am, delivery to this address" — and the bot realises it has enough data, closes the order, and doesn't ask redundant questions.
-
-**Manager notification is a separate node after the Sheets write.** If the manager's Telegram API fails, it doesn't block the confirmation to the customer or the order record. The customer journey is isolated from internal infrastructure issues.
-
-**Simple Memory rather than an external store.** For a bounded "one order = one dialogue" session that's enough. It's worth upgrading when a "reach out to the customer a week later" scenario appears — then you move to Postgres/Redis.
-
-### Stack
-
-- `n8n` — orchestrator
-- `Groq` — LLM (llama-3.3-70b-versatile)
-- Simple Memory — in-memory session context
-- `Telegram Bot API` — customer and manager channel
-- `Google Sheets` — order database
-
-### Credentials to configure
-
-- Telegram Bot (customer-facing)
-- Telegram Bot (same or another, with the manager's chat_id)
-- Groq API key
-- Google Sheets OAuth2
-
-### How to run
-
-1. `Workflows → Import from File` → pick [`workflow.json`](./workflow.json).
-2. Configure the credentials.
-3. In the "notify the manager" node, set your own `chat_id`.
-4. In the "Append row in sheet" node, connect your spreadsheet.
-5. Activate.
+Сильная сторона проекта — разделение разговора, краткосрочного контекста, записи в таблицу и уведомления менеджера. Ограничения указаны прямо: Simple Memory недолговечна, парсинг формата хрупкий, а идемпотентность и проверка расписания пока не реализованы.

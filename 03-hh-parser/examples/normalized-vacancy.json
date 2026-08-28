@@ -1,0 +1,10 @@
+{
+  "title": "AI Automation Engineer",
+  "company": "Example Company",
+  "salary": 180000,
+  "currency": "RUR",
+  "work_format": "Удаленная работа",
+  "requirements": "n8n, REST APIs, JavaScript, LLM integrations",
+  "responsibilities": "Design and maintain business automation workflows",
+  "url": "https://example.com/jobs/automation-engineer"
+}

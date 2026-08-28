@@ -1,0 +1,9 @@
+{
+  "competitor": "Example Store",
+  "product": "Phone A 128 GB",
+  "old_price": 51900,
+  "new_price": 49900,
+  "difference": -2000,
+  "difference_percent": -3.85,
+  "ai_summary": "The observed price decreased; verify stock and product equivalence before changing your own offer."
+}
