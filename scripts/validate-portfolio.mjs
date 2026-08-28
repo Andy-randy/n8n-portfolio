@@ -4,6 +4,11 @@ import path from 'node:path';
 const root = process.cwd();
 const errors = [];
 const stats = { json: 0, workflows: 0, markdown: 0, images: 0, mermaid: 0 };
+const canonicalProjectStubs = new Map([
+  ['02-lead-funnel/README.md', 'https://github.com/Andy-randy/ai-lead-processing-pipeline'],
+  ['04-rag-telegram-faq-bot/README.md', 'https://github.com/Andy-randy/rag-telegram-faq-bot'],
+  ['08-barbershop-booking-api/README.md', 'https://github.com/Andy-randy/barbershop-booking-api'],
+]);
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 async function walk(directory) {
@@ -245,7 +250,7 @@ async function validateMarkdown(absolute) {
     addError(file, `root README must contain 120–200 lines; found ${lineCount}`);
   }
 
-  if (/^0[1-8]-[^/]+\/README\.md$/.test(file)) {
+  if (/^0[1-8]-[^/]+\/README\.md$/.test(file) && !canonicalProjectStubs.has(file)) {
     const requiredSections = [
       '## Business problem',
       '## Solution',
@@ -269,6 +274,11 @@ async function validateMarkdown(absolute) {
       else if (position <= previous) addError(file, `section is out of order: ${heading}`);
       previous = Math.max(previous, position);
     }
+  }
+
+  if (canonicalProjectStubs.has(file)) {
+    const canonicalUrl = canonicalProjectStubs.get(file);
+    if (!source.includes(canonicalUrl)) addError(file, `missing canonical repository link: ${canonicalUrl}`);
   }
 
   const headingAnchors = new Set(
@@ -316,6 +326,14 @@ const allowedSpecialPaths = new Set([
   'docs/ARCHITECTURE.md',
   'tests/TEST_CASES.md',
 ]);
+
+for (const file of canonicalProjectStubs.keys()) {
+  const directory = path.dirname(path.join(root, file));
+  const entries = await readdir(directory);
+  if (entries.length !== 1 || entries[0] !== 'README.md') {
+    addError(file, 'canonical project stub directory must contain only README.md');
+  }
+}
 
 for (const absolute of await walk(root)) {
   const file = relative(absolute);

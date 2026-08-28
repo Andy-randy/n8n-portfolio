@@ -1,9 +1,0 @@
-{
-  "name": "Anton Sokolov",
-  "email": "anton@example.com",
-  "phone": "+79000000000",
-  "budget": 150000,
-  "temperature": "горячий",
-  "reason": "The request contains a concrete task and budget.",
-  "next_action": "Send the lead to a manager for qualification."
-}
