@@ -6,21 +6,31 @@ The projects document validation, deterministic routing, structured model output
 
 [Featured projects](#featured-case-studies) · [All case studies](#project-index) · [Engineering principles](#engineering-principles) · [Security and setup](#security-and-setup) · [Русская версия](#русская-версия)
 
-## Start here: Barbershop Booking API
+## Start here: AI Booking System
 
-The flagship case study is a modular booking API split across request handling, phone validation, asynchronous notifications, and centralized error reporting.
+The flagship case study is a modular booking and customer support system built from nine connected n8n workflows. It covers booking, rescheduling, cancellation, RAG FAQ, persistent conversations, and authorized administrator handoff.
 
-Its strongest engineering signal is explicit boundaries: the API responds after persistence, notifications do not block the client, and the documentation distinguishes practical retry deduplication from true concurrency-safe idempotency.
+Its engineering focus is explicit service boundaries: shared Calendar and Memory services, deterministic validation after AI interpretation, guarded handoff closure, and conditional rollback after notification failures. The documentation separates local checks from reported integration results and explains idempotency and concurrency limits.
 
-**Stack:** `n8n` · `Webhook API` · `Google Sheets` · `Telegram` · `Gmail`
+**Stack:** `n8n` · `Supabase / PostgreSQL` · `Groq` · `Gemini` · `Telegram`
 
-[Open the Barbershop Booking API repository](https://github.com/Andy-randy/barbershop-booking-api)
+[Open AI Booking System](https://github.com/Andy-randy/ai-booking-system) · [Русская документация](https://github.com/Andy-randy/ai-booking-system/blob/main/README.ru.md)
 
-![Barbershop Booking API main workflow](https://raw.githubusercontent.com/Andy-randy/barbershop-booking-api/main/screenshots/main-workflow.png)
+![AI Booking System Calendar Service: availability checks and booking creation](https://raw.githubusercontent.com/Andy-randy/ai-booking-system/main/docs/images/calendar-service-workflow.png)
 
 ## Featured case studies
 
-### 1. Barbershop Booking API
+### 1. AI Booking System
+
+**Business use case:** manage the appointment lifecycle and customer questions through Telegram, with administrator support when needed.
+
+**Engineering focus:** nine workflow contracts, persistent state and history, shared availability checks, RAG retrieval, administrator authorization, conditional close and notification-failure rollback.
+
+**Stack:** `n8n` · `Supabase / PostgreSQL` · `Groq` · `Gemini` · `Telegram`
+
+[Case study](https://github.com/Andy-randy/ai-booking-system) · [Русская документация](https://github.com/Andy-randy/ai-booking-system/blob/main/README.ru.md)
+
+### 2. Barbershop Booking API
 
 **Business use case:** accept booking requests, validate customer data, avoid ordinary retry duplicates, store the booking, and notify the manager and customer.
 
@@ -30,7 +40,9 @@ Its strongest engineering signal is explicit boundaries: the API responds after 
 
 [Case study](https://github.com/Andy-randy/barbershop-booking-api)
 
-### 2. RAG Telegram FAQ Bot
+![Barbershop Booking API main workflow](https://raw.githubusercontent.com/Andy-randy/barbershop-booking-api/main/screenshots/main-workflow.png)
+
+### 3. RAG Telegram FAQ Bot
 
 **Business use case:** index a controlled document and answer recurring Telegram questions from retrieved knowledge.
 
@@ -42,7 +54,7 @@ Its strongest engineering signal is explicit boundaries: the API responds after 
 
 ![RAG Telegram query workflow](https://raw.githubusercontent.com/Andy-randy/rag-telegram-faq-bot/main/screenshots/query-workflow.png)
 
-### 3. AI Lead Processing Pipeline
+### 4. AI Lead Processing Pipeline
 
 **Business use case:** validate inbound leads, assess intent, and route hot, warm, and cold contacts to different sales actions.
 
@@ -54,7 +66,7 @@ Its strongest engineering signal is explicit boundaries: the API responds after 
 
 ![AI lead pipeline workflow](https://raw.githubusercontent.com/Andy-randy/ai-lead-processing-pipeline/main/screenshots/workflow-overview.png)
 
-### 4. Competitor Price Monitoring
+### 5. Competitor Price Monitoring
 
 **Business use case:** monitor public product pages, compare observed prices with stored history, and alert operators to meaningful changes.
 
@@ -78,6 +90,7 @@ Its strongest engineering signal is explicit boundaries: the API responds after 
 | 06 | [Fitness Club Lead Capture](./06-fitness-club-lead-capture/README.md) | Validate and distribute campaign leads | Reusable validation and conditional email path |
 | 07 | [AI Service Request Automation](./07-ai-service-request-automation/README.md) | Triage appliance-repair requests | Strict urgency contract and operator-visible AI failures |
 | 08 | [Barbershop Booking API](https://github.com/Andy-randy/barbershop-booking-api) | Create and notify on bookings | Modular API flow and practical idempotency boundary |
+| 09 | [AI Booking System](https://github.com/Andy-randy/ai-booking-system) | Manage booking, rescheduling, cancellation, FAQ and administrator support | Stateful service orchestration, administrator authorization and conditional rollback |
 
 Supporting workflow sketches live in [`experiments/`](./experiments/README.md). They are sanitized examples, not featured case studies.
 
@@ -107,7 +120,7 @@ Supporting workflow sketches live in [`experiments/`](./experiments/README.md). 
 
 - LLM classification with controlled outputs;
 - retrieval-augmented generation with a vector store;
-- bounded conversation memory;
+- bounded conversation memory and persistent conversation state;
 - semantic scoring combined with deterministic conditions;
 - AI enrichment placed after deterministic change detection.
 
@@ -117,7 +130,7 @@ Supporting workflow sketches live in [`experiments/`](./experiments/README.md). 
 - Telegram and Gmail notifications;
 - CRM and generic REST API calls;
 - Google Drive document ingestion;
-- Supabase vector retrieval.
+- Supabase / PostgreSQL state storage, guarded database functions, and vector retrieval.
 
 ## Repository conventions
 
@@ -171,6 +184,8 @@ For project or collaboration discussions, use the contact links on the [GitHub p
 
 Это портфолио production-oriented автоматизаций на n8n: API и webhook-интеграции, LLM-классификация, RAG, CRM-сценарии, Telegram/Gmail и работа с данными. В каждом полноценном кейсе показаны не только happy path, но и контракты, валидация, ошибки, тесты, ограничения и путь к production.
 
-Начать лучше с четырёх проектов: **Barbershop Booking API**, **RAG Telegram FAQ Bot**, **AI Lead Processing Pipeline** и **Competitor Price Monitoring**. Подробные схемы, примеры и тестовые сценарии находятся в README соответствующих проектов.
+Основной проект — **[AI Booking System](https://github.com/Andy-randy/ai-booking-system)**: девять workflow для записи, переноса, отмены, RAG FAQ и передачи диалога администратору. В нём показаны постоянное состояние, общие сервисы расписания и памяти, проверка прав и условный rollback при ошибке уведомления. [Русская документация](https://github.com/Andy-randy/ai-booking-system/blob/main/README.ru.md).
+
+Далее можно посмотреть **Barbershop Booking API**, **RAG Telegram FAQ Bot**, **AI Lead Processing Pipeline** и **Competitor Price Monitoring**. Подробные схемы, примеры и тестовые сценарии находятся в README соответствующих проектов.
 
 Все публичные workflow выключены и санитизированы. Перед использованием нужно вручную подключить credentials, заменить placeholders и повторить тесты в отдельном n8n workspace.
